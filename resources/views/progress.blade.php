@@ -45,7 +45,7 @@
                                         {{ $session->title }}
                                     </a>
                                 </td>
-                                <td class="py-2 text-slate-400">{{ $session->completed_at?->translatedFormat('d MMM, HH:mm') }}</td>
+                                <td class="py-2 text-slate-400">{{ $session->completed_at?->translatedFormat('d M, H:i') }}</td>
                                 <td class="py-2 text-right">
                                     <x-badge :color="$session->score >= 70 ? 'emerald' : ($session->score >= 40 ? 'amber' : 'rose')">
                                         {{ $session->score }}%

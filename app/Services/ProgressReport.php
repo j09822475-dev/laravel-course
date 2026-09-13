@@ -7,6 +7,7 @@ use App\Models\InterviewSession;
 use App\Models\SessionItem;
 use App\Models\Topic;
 use App\Models\Trainee;
+use App\Support\Plural;
 use Illuminate\Support\Collection;
 
 /**
@@ -105,10 +106,9 @@ class ProgressReport
 
         foreach ($weak->take(3) as $topicName => $group) {
             $advice[] = sprintf(
-                'Тема «%s»: %d проваленных %s — вернитесь к ней в режиме карточек.',
+                'Тема «%s»: %s — вернитесь к ней в режиме карточек.',
                 $topicName,
-                $group->count(),
-                $group->count() === 1 ? 'вопрос' : 'вопросов',
+                Plural::count($group->count(), 'проваленный вопрос', 'проваленных вопроса', 'проваленных вопросов'),
             );
         }
 
@@ -116,9 +116,8 @@ class ProgressReport
 
         if ($slow->isNotEmpty()) {
             $advice[] = sprintf(
-                'На %d %s вы потратили заметно больше ориентировочного времени — тренируйте краткий ответ на 1–2 минуты.',
-                $slow->count(),
-                $slow->count() === 1 ? 'вопросе' : 'вопросах',
+                'На %s вы потратили заметно больше ориентировочного времени — тренируйте краткий ответ на 1–2 минуты.',
+                Plural::count($slow->count(), 'вопросе', 'вопросах', 'вопросах'),
             );
         }
 

@@ -127,6 +127,27 @@ class InterviewSessionTest extends TestCase
             ->assertSee('Готовы к собеседованию');
     }
 
+    public function test_report_uses_correct_russian_wording_and_date(): void
+    {
+        $topic = Topic::factory()->create();
+        Question::factory()->count(10)->for($topic)->quiz(correct: 0)->create();
+
+        $this->get('/');
+        $this->post('/sessions', ['mode' => 'quiz']);
+
+        $session = InterviewSession::sole();
+
+        for ($i = 0; $i < 10; $i++) {
+            $this->post(route('sessions.answer', $session), ['option' => 0, 'seconds' => 5]);
+        }
+
+        $this->get(route('sessions.report', $session))
+            ->assertOk()
+            ->assertSee('10 вопросов')
+            ->assertDontSee('10 вопроса')
+            ->assertSee(now()->translatedFormat('d F, H:i'));
+    }
+
     public function test_trainee_cannot_open_foreign_session(): void
     {
         $this->seedQuestionBank();

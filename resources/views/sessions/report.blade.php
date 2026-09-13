@@ -15,9 +15,9 @@
                 <div>
                     <h1 class="text-xl font-semibold">{{ $session->title }}</h1>
                     <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                        {{ $items->count() }} {{ trans_choice('вопрос|вопроса|вопросов', $items->count()) }} ·
+                        {{ \App\Support\Plural::count($items->count(), 'вопрос', 'вопроса', 'вопросов') }} ·
                         {{ (int) round($session->total_seconds / 60) }} мин ·
-                        {{ $session->completed_at?->translatedFormat('d MMMM, HH:mm') }}
+                        {{ $session->completed_at?->translatedFormat('d F, H:i') }}
                     </p>
                 </div>
                 <div class="text-right">
