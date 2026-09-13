@@ -1,0 +1,214 @@
+{
+  "topic": {
+    "slug": "live-coding",
+    "name": "Живое кодирование",
+    "area": "backend",
+    "position": 11,
+    "description": "Практические задачи, которые дают на скрининге и в технической секции: код, SQL, поиск бага."
+  },
+  "questions": [
+    {
+      "id": "live-coding-01",
+      "type": "coding",
+      "difficulty": "junior",
+      "estimated_seconds": 420,
+      "prompt": "Напишите метод, который принимает коллекцию заказов и возвращает сумму по каждому клиенту, отсортированную по убыванию. Проговорите решение вслух, как на собеседовании.",
+      "answer": "На коллекциях Laravel:\n\n$orders->groupBy('customer_id')\n    ->map(fn ($group) => $group->sum('total'))\n    ->sortDesc();\n\nЕсли данных много, эту работу нужно отдать базе:\n\nOrder::query()\n    ->selectRaw('customer_id, SUM(total) as total_sum')\n    ->groupBy('customer_id')\n    ->orderByDesc('total_sum')\n    ->get();\n\nНа собеседовании важно проговорить: где выполняется агрегация (PHP или БД), что будет при миллионе строк, нужны ли деньги в копейках (integer) вместо float, и попросить уточнить формат входных данных.",
+      "checklist": [
+        "Использует groupBy/map/sum, а не ручные циклы с массивами",
+        "Замечает, что агрегацию лучше делать в БД",
+        "Упоминает точность денег (int в минимальных единицах)",
+        "Задаёт уточняющие вопросы по входным данным"
+      ],
+      "red_flags": [
+        "Пишет вложенные циклы и ручное накопление без объяснения",
+        "Не видит проблемы с памятью на больших данных",
+        "Молчит всё время решения"
+      ],
+      "follow_ups": [
+        "Как отдать только топ-10 клиентов?",
+        "Что изменится, если заказов 5 миллионов?",
+        "Почему float опасен для денег?"
+      ],
+      "tags": ["коллекции", "sql"]
+    },
+    {
+      "id": "live-coding-02",
+      "type": "coding",
+      "difficulty": "middle",
+      "estimated_seconds": 480,
+      "prompt": "Найдите проблемы в коде контроллера:\n\npublic function index(Request $request)\n{\n    $posts = Post::all();\n    $result = [];\n    foreach ($posts as $post) {\n        if ($post->author->active) {\n            $result[] = ['title' => $post->title, 'author' => $post->author->name];\n        }\n    }\n    return response()->json($result);\n}",
+      "answer": "Проблемы: 1) Post::all() тянет всю таблицу в память — нужна пагинация и выборка нужных колонок. 2) Классический N+1: $post->author в цикле делает запрос на каждый пост. 3) Фильтрация активных авторов выполняется в PHP, хотя это работа БД. 4) Ответ формируется вручную — лучше API Resource. 5) Нет авторизации и обработки пустого автора (nullable связь даст ошибку).\n\nПереписанный вариант:\n\n$posts = Post::query()\n    ->select('id', 'title', 'author_id')\n    ->whereHas('author', fn ($q) => $q->where('active', true))\n    ->with('author:id,name')\n    ->paginate(20);\n\nreturn PostResource::collection($posts);\n\nДополнительно: индекс на author_id, при необходимости join вместо whereHas для тяжёлых случаев.",
+      "checklist": [
+        "Нашёл N+1 и предложил with/whereHas",
+        "Заметил отсутствие пагинации",
+        "Перенёс фильтрацию в БД",
+        "Предложил Resource вместо ручного массива",
+        "Подумал про nullable-связь и индексы"
+      ],
+      "red_flags": [
+        "Считает код нормальным",
+        "Добавляет кэш вместо исправления запроса",
+        "Не может объяснить, что такое N+1"
+      ],
+      "follow_ups": [
+        "Чем whereHas отличается от join по стоимости?",
+        "Как убедиться, что N+1 исчез?",
+        "Что вернуть, если у поста нет автора?"
+      ],
+      "tags": ["ревью кода", "n+1", "eloquent"]
+    },
+    {
+      "id": "live-coding-03",
+      "type": "coding",
+      "difficulty": "middle",
+      "estimated_seconds": 420,
+      "prompt": "Напишите SQL: вывести email пользователей, сделавших более трёх заказов за последние 30 дней, и сумму этих заказов, начиная с самых крупных.",
+      "answer": "SELECT u.id, u.email, COUNT(o.id) AS orders_count, SUM(o.total) AS total_sum\nFROM users u\nJOIN orders o ON o.user_id = u.id\nWHERE o.created_at >= NOW() - INTERVAL 30 DAY\n  AND o.status = 'paid'\nGROUP BY u.id, u.email\nHAVING COUNT(o.id) > 3\nORDER BY total_sum DESC;\n\nКлючевые моменты: условие по дате в WHERE (до группировки), фильтр по количеству — в HAVING (после), нужен индекс (user_id, created_at). Стоит уточнить у интервьюера, какие статусы заказов считаем и нужно ли включать пользователей без заказов (тогда LEFT JOIN, но с HAVING > 3 это не имеет смысла).",
+      "checklist": [
+        "Различает WHERE и HAVING",
+        "Группирует по корректному набору колонок",
+        "Думает об индексе",
+        "Уточняет бизнес-условия (статус заказа)"
+      ],
+      "red_flags": [
+        "Ставит условие по количеству в WHERE",
+        "Пытается отфильтровать в PHP после выборки",
+        "Не понимает, зачем GROUP BY"
+      ],
+      "follow_ups": [
+        "Как это записать в Eloquent?",
+        "Что изменится при 50 млн заказов?",
+        "Как посчитать ещё и средний чек?"
+      ],
+      "tags": ["sql", "агрегаты"]
+    },
+    {
+      "id": "live-coding-04",
+      "type": "coding",
+      "difficulty": "middle",
+      "estimated_seconds": 480,
+      "prompt": "Реализуйте сервис, который начисляет кешбэк на баланс пользователя после оплаты заказа. Требования: без двойного начисления при повторном вызове.",
+      "answer": "Идея: операция идемпотентна по идентификатору заказа, запись в журнал транзакций баланса с уникальным индексом.\n\npublic function award(Order $order): void\n{\n    DB::transaction(function () use ($order) {\n        $user = User::whereKey($order->user_id)->lockForUpdate()->first();\n\n        $created = BalanceTransaction::firstOrCreate(\n            ['source_type' => 'order_cashback', 'source_id' => $order->id],\n            ['user_id' => $user->id, 'amount' => $this->calculate($order)],\n        );\n\n        if (! $created->wasRecentlyCreated) {\n            return; // уже начисляли\n        }\n\n        $user->increment('balance', $created->amount);\n    });\n}\n\nВажные детали: уникальный индекс (source_type, source_id) на уровне БД — он, а не проверка в PHP, гарантирует отсутствие дублей при гонке; деньги в целых копейках; блокировка строки пользователя или атомарный increment; уведомление пользователю отправляем после коммита; событие/джоб с afterCommit.",
+      "checklist": [
+        "Идемпотентность обеспечена уникальным индексом в БД",
+        "Есть транзакция и блокировка/атомарный инкремент",
+        "Журнал операций, а не просто поле баланса",
+        "Побочные эффекты после коммита",
+        "Деньги в целых единицах"
+      ],
+      "red_flags": [
+        "Проверка «существует ли начисление» без уникального индекса",
+        "Начисление изменением баланса без истории",
+        "Отправка письма внутри транзакции"
+      ],
+      "follow_ups": [
+        "Что произойдёт при двух параллельных вызовах?",
+        "Как сделать откат начисления при возврате заказа?",
+        "Почему поля баланса недостаточно для аудита?"
+      ],
+      "tags": ["транзакции", "идемпотентность", "проектирование"]
+    },
+    {
+      "id": "live-coding-05",
+      "type": "coding",
+      "difficulty": "junior",
+      "estimated_seconds": 360,
+      "prompt": "Напишите функцию, которая проверяет, является ли строка палиндромом, игнорируя регистр и небуквенные символы. Учтите кириллицу.",
+      "answer": "function isPalindrome(string $value): bool\n{\n    $normalized = preg_replace('/[^\\p{L}\\p{N}]+/u', '', $value);\n    $normalized = mb_strtolower($normalized, 'UTF-8');\n\n    return $normalized === implode('', array_reverse(mb_str_split($normalized)));\n}\n\nКлючевое на собеседовании — юникод: strrev и strtolower ломают кириллицу, поэтому нужны mb_-функции, mb_str_split и модификатор /u в регулярном выражении. Сложность O(n) по времени и памяти; альтернатива без реверса — два указателя с начала и конца.\nПроверьте краевые случаи: пустая строка, строка из одних знаков препинания, строка из одного символа.",
+      "checklist": [
+        "Использует mb_-функции и /u",
+        "Нормализует строку перед сравнением",
+        "Проговаривает краевые случаи",
+        "Называет сложность"
+      ],
+      "red_flags": [
+        "strrev на кириллице",
+        "Не спрашивает про требования к символам",
+        "Не проверяет пустую строку"
+      ],
+      "follow_ups": [
+        "Как решить это без создания перевёрнутой строки?",
+        "Какая сложность у вашего решения?",
+        "Как бы вы это протестировали?"
+      ],
+      "tags": ["алгоритмы", "строки", "php"]
+    },
+    {
+      "id": "live-coding-06",
+      "type": "coding",
+      "difficulty": "senior",
+      "estimated_seconds": 480,
+      "prompt": "Что не так с этим кодом и как исправить?\n\npublic function transfer(User $from, User $to, int $amount): void\n{\n    if ($from->balance >= $amount) {\n        $from->balance -= $amount;\n        $from->save();\n        $to->balance += $amount;\n        $to->save();\n        Mail::to($to)->send(new MoneyReceived($amount));\n    }\n}",
+      "answer": "Проблемы: 1) Нет транзакции — падение между save() оставит деньги списанными, но не зачисленными. 2) Гонка: два параллельных перевода прочитают один и тот же баланс и уйдут в минус (lost update). 3) Отправка письма синхронно и до коммита — при откате письмо уже ушло, а при недоступности SMTP упадёт весь перевод. 4) Молчаливый выход при нехватке средств вместо исключения — вызывающий код не узнает о неуспехе. 5) Нет журнала операций и идемпотентности.\n\nИсправление:\n\nDB::transaction(function () use ($from, $to, $amount) {\n    $sender = User::whereKey($from->id)->lockForUpdate()->first();\n\n    if ($sender->balance < $amount) {\n        throw new InsufficientFundsException();\n    }\n\n    User::whereKey($sender->id)->decrement('balance', $amount);\n    User::whereKey($to->id)->increment('balance', $amount);\n\n    TransferLog::create([...]);\n});\n\nSendMoneyReceivedMail::dispatch($to->id, $amount)->afterCommit();\n\nДополнительно: блокировать строки в одинаковом порядке (по возрастанию id), чтобы не поймать deadlock, и добавить идемпотентный ключ операции.",
+      "checklist": [
+        "Видит отсутствие транзакции",
+        "Видит гонку и предлагает блокировку или атомарный decrement",
+        "Выносит письмо из транзакции и в очередь",
+        "Предлагает исключение вместо тихого выхода",
+        "Помнит про журнал операций и deadlock"
+      ],
+      "red_flags": [
+        "Считает достаточным добавить только транзакцию",
+        "Не замечает проблему с письмом",
+        "Не понимает, откуда берётся отрицательный баланс"
+      ],
+      "follow_ups": [
+        "Как избежать взаимной блокировки при встречных переводах?",
+        "Как сделать перевод идемпотентным?",
+        "Как это покрыть тестом?"
+      ],
+      "tags": ["ревью кода", "транзакции", "конкурентность"]
+    },
+    {
+      "id": "live-coding-07",
+      "type": "coding",
+      "difficulty": "middle",
+      "estimated_seconds": 420,
+      "prompt": "Напишите feature-тест: гость не может создать пост, авторизованный пользователь может, а чужой пост редактировать нельзя.",
+      "answer": "public function test_guest_cannot_create_post(): void\n{\n    $this->postJson('/api/posts', ['title' => 'Hi'])->assertUnauthorized();\n}\n\npublic function test_user_can_create_post(): void\n{\n    $user = User::factory()->create();\n\n    $this->actingAs($user)\n        ->postJson('/api/posts', ['title' => 'Hi', 'body' => 'Text'])\n        ->assertCreated()\n        ->assertJsonPath('data.title', 'Hi');\n\n    $this->assertDatabaseHas('posts', ['title' => 'Hi', 'user_id' => $user->id]);\n}\n\npublic function test_user_cannot_update_foreign_post(): void\n{\n    $post = Post::factory()->create();\n\n    $this->actingAs(User::factory()->create())\n        ->patchJson(\"/api/posts/{$post->id}\", ['title' => 'Hacked'])\n        ->assertForbidden();\n\n    $this->assertDatabaseMissing('posts', ['title' => 'Hacked']);\n}\n\nВажно: трейт RefreshDatabase, фабрики вместо ручных вставок, проверка и ответа, и состояния БД, отдельный тест на валидацию (assertJsonValidationErrors).",
+      "checklist": [
+        "Использует actingAs и фабрики",
+        "Проверяет и HTTP-ответ, и состояние БД",
+        "Покрывает негативные сценарии (401/403/422)",
+        "Каждый тест независим"
+      ],
+      "red_flags": [
+        "Тестирует только счастливый путь",
+        "Создаёт данные вручную через DB::insert",
+        "Зависимость между тестами"
+      ],
+      "follow_ups": [
+        "Как протестировать ошибку валидации?",
+        "Где здесь уместна политика (Policy)?",
+        "Как проверить, что письмо об публикации ушло?"
+      ],
+      "tags": ["тесты", "api"]
+    },
+    {
+      "id": "live-coding-08",
+      "type": "coding",
+      "difficulty": "middle",
+      "estimated_seconds": 420,
+      "prompt": "Спроектируйте и напишите миграцию и модель для системы тегов, которую можно прикрепить и к постам, и к товарам.",
+      "answer": "Полиморфная связь many-to-many (morphToMany):\n\nSchema::create('tags', function (Blueprint $table) {\n    $table->id();\n    $table->string('slug')->unique();\n    $table->string('name');\n    $table->timestamps();\n});\n\nSchema::create('taggables', function (Blueprint $table) {\n    $table->foreignId('tag_id')->constrained()->cascadeOnDelete();\n    $table->morphs('taggable'); // taggable_id + taggable_type + индекс\n    $table->primary(['tag_id', 'taggable_id', 'taggable_type']);\n});\n\nВ моделях:\n\n// Tag\npublic function posts(): MorphToMany { return $this->morphedByMany(Post::class, 'taggable'); }\n\n// Post и Product\npublic function tags(): MorphToMany { return $this->morphToMany(Tag::class, 'taggable'); }\n\nНюансы: составной первичный ключ защищает от дублей, morphs создаёт нужный индекс, внешний ключ на taggable_id поставить нельзя — это цена полиморфизма (целостность поддерживаем кодом). Для нормализации имени тега — slug и Str::slug, привязка через sync/attach/detach, счётчик использований при необходимости денормализуем.",
+      "checklist": [
+        "Выбирает полиморфную связь и объясняет почему",
+        "Защищает от дублей ключом или уникальным индексом",
+        "Знает про morphs и индексы",
+        "Понимает ограничение по внешним ключам"
+      ],
+      "red_flags": [
+        "Делает по таблице связей на каждую сущность без причины",
+        "Хранит теги строкой через запятую",
+        "Не думает об индексах"
+      ],
+      "follow_ups": [
+        "Как найти все сущности по тегу одним запросом?",
+        "Как реализовать облако тегов с количеством?",
+        "Когда полиморфизм — плохая идея?"
+      ],
+      "tags": ["схема бд", "eloquent", "проектирование"]
+    }
+  ]
+}

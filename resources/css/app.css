@@ -1,0 +1,19 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+
+/* Системный шрифтовой стек: сборка не зависит от внешних CDN. */
+@theme {
+    --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif,
+        'Apple Color Emoji', 'Segoe UI Emoji';
+}
+
+/* Эталонные ответы приходят из JSON с переводами строк — сохраняем их как есть. */
+.answer-body {
+    white-space: pre-wrap;
+}
+
+details[open] > summary .details-marker {
+    transform: rotate(90deg);
+}
