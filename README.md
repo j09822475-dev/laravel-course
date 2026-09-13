@@ -77,7 +77,7 @@ php artisan interview:drill --topic=laravel-core --level=middle --count=5
 ## Разработка
 
 ```sh
-php artisan test          # 37 тестов: сценарии интервью, оценка, повторения, контент банка
+php artisan test          # 53 теста: сценарии интервью, оценка, повторения, контент банка
 ./vendor/bin/pint         # стиль кода
 npm run dev               # Vite с горячей перезагрузкой
 ```
