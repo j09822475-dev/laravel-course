@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\IdentifyTrainee;
+use App\Http\Middleware\TrustProxies;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -17,6 +18,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             IdentifyTrainee::class,
         ]);
+
+        // Настройки прокси читаются из конфигурации уже во время запроса,
+        // поэтому подменяем стандартный middleware своим.
+        $middleware->replace(Illuminate\Http\Middleware\TrustProxies::class, TrustProxies::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
