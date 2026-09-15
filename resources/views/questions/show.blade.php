@@ -11,16 +11,27 @@
                 <x-badge color="indigo">{{ $question->topic->name }}</x-badge>
                 <x-badge>{{ $question->type->label() }}</x-badge>
                 <x-badge color="sky">{{ $question->difficulty->label() }}</x-badge>
-                <span class="ml-auto text-xs text-slate-400">
-                    ориентир {{ (int) ceil($question->estimated_seconds / 60) }} мин
+                @if ($text->needsTranslation())
+                    <x-badge color="amber">перевода нет</x-badge>
+                @endif
+
+                <span class="ml-auto flex items-center gap-2 text-xs text-slate-400">
+                    <span>ориентир {{ (int) ceil($question->estimated_seconds / 60) }} мин</span>
+                    @foreach (\App\Enums\Language::cases() as $option)
+                        <a href="{{ route('questions.show', [$question, 'lang' => $option->value]) }}"
+                           class="rounded px-1.5 py-0.5 font-semibold transition
+                                  {{ $language === $option ? 'bg-indigo-600 text-white' : 'hover:text-indigo-600' }}">
+                            {{ $option->short() }}
+                        </a>
+                    @endforeach
                 </span>
             </div>
 
-            <h1 class="answer-body mt-4 text-lg font-semibold leading-relaxed">{{ $question->prompt }}</h1>
+            <h1 class="answer-body mt-4 text-lg font-semibold leading-relaxed">{{ $text->prompt }}</h1>
 
-            @if ($question->options)
+            @if ($question->hasOptions())
                 <ul class="mt-4 space-y-2 text-sm">
-                    @foreach ($question->options as $index => $option)
+                    @foreach ($text->options as $index => $option)
                         <li class="rounded-xl border p-3 {{ $index === $question->correct_option
                             ? 'border-emerald-400 bg-emerald-50 dark:border-emerald-500/40 dark:bg-emerald-500/10'
                             : 'border-slate-200 dark:border-slate-800' }}">
@@ -29,14 +40,14 @@
                     @endforeach
                 </ul>
             @else
-                <div class="answer-body mt-4 text-sm leading-relaxed text-slate-700 dark:text-slate-300">{{ $question->answer }}</div>
+                <div class="answer-body mt-4 text-sm leading-relaxed text-slate-700 dark:text-slate-300">{{ $text->answer }}</div>
             @endif
 
-            @if ($question->explanation)
-                <p class="mt-4 rounded-xl bg-slate-50 p-3 text-sm text-slate-600 dark:bg-slate-950 dark:text-slate-400">
-                    {{ $question->explanation }}
-                </p>
+            @if ($text->explanation)
+                <p class="answer-body mt-4 rounded-xl bg-slate-50 p-3 text-sm text-slate-600 dark:bg-slate-950 dark:text-slate-400">{{ $text->explanation }}</p>
             @endif
+
+            <p class="mt-4 text-xs text-slate-500 dark:text-slate-400">{{ $question->type->technique() }}</p>
 
             @foreach ([
                 ['Что оценивает интервьюер', $question->checklist, 'text-emerald-500', '✓'],
@@ -54,11 +65,11 @@
                 @endif
             @endforeach
 
-            @if ($question->follow_ups)
+            @if ($text->followUps)
                 <div class="mt-5">
                     <div class="text-xs font-semibold uppercase tracking-wide text-slate-500">Уточняющие вопросы интервьюера</div>
                     <ul class="mt-2 space-y-1 text-sm text-slate-600 dark:text-slate-400">
-                        @foreach ($question->follow_ups as $followUp)
+                        @foreach ($text->followUps as $followUp)
                             <li>— {{ $followUp }}</li>
                         @endforeach
                     </ul>

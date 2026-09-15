@@ -1,0 +1,72 @@
+{
+  "locale": "en",
+  "questions": {
+    "api-security-01": {
+      "prompt": "How do you design a REST API — methods, status codes, error format?",
+      "answer": "Resources are plural nouns and the verbs are HTTP methods: GET for reads, POST to create, PUT or PATCH to update, DELETE to remove, with GET, PUT and DELETE idempotent.\n\nFor status codes: 200, 201 with a Location header, 202 for accepted work, 204 for no content, 400, 401, 403, 404, 409 for conflicts, 422 for validation, 429 for rate limits, 500 for server errors. The error format is consistent — Laravel returns a message and a field-level error bag for 422. Responses go through API resources, and the version lives in the URL or a header."
+    },
+    "api-security-02": {
+      "prompt": "Sanctum, Passport or JWT — what do you choose and why?",
+      "answer": "Sanctum covers most cases: cookie-based session auth for a first-party SPA and personal access tokens with abilities for mobile and external clients, stored in the database so they can be revoked. Passport is a full OAuth2 server, which you need when third-party applications get access on behalf of your users.\n\nJWT packages give stateless tokens: no database round trip, but you cannot revoke a token before it expires, so you need short lifetimes, refresh and a deny list. Rule of thumb: own frontend and mobile — Sanctum; third-party integrations — OAuth2; distributed services — JWT with proper key rotation."
+    },
+    "api-security-03": {
+      "prompt": "What is the difference between authentication and authorisation? How is authorisation implemented in Laravel?",
+      "answer": "Authentication is who you are, authorisation is what you may do. Laravel handles authentication with guards and providers, and authorisation with gates and policies.\n\nA policy is a class per model with methods like view, update and delete. You call it from the controller, from a middleware, or in Blade. Roles are usually a package or your own roles checked inside policies. The important part is applying the same policy in the API and the UI, and a before hook can give an admin blanket access."
+    },
+    "api-security-04": {
+      "prompt": "Name the main web application vulnerabilities and how Laravel helps against them.",
+      "answer": "SQL injection — parameterised queries through Eloquent and the query builder; the risk returns when you concatenate input into raw expressions. XSS — Blade escapes output by default, and unescaped output is only for trusted or sanitised HTML. CSRF — a token in forms plus middleware, or the Sanctum cookie flow for a SPA.\n\nMass assignment — fillable plus validated data. Broken object level authorisation — policies, not obscure ids. File uploads — validate type and size, store outside the public folder and serve through signed URLs. Secrets stay out of the repository, passwords are hashed, and login endpoints are rate limited. HTTPS, security headers and dependency updates complete the picture."
+    },
+    "api-security-05": {
+      "prompt": "How do you rate limit an API, and what do you return to the client?",
+      "answer": "Laravel has a rate limiter with named limiters and a throttle middleware, keyed by user or IP. When the limit is exceeded the client gets 429 with the remaining quota headers and Retry-After.\n\nThe limits differ per endpoint: login and password reset are strict, reads are relaxed, paid plans get their own quota. The store has to be Redis so the limit works across several servers. Expensive endpoints get extra protection, and for integrations the quota is agreed and documented."
+    },
+    "api-security-06": {
+      "prompt": "How would you design webhook handling from a payment provider so that nothing is lost?",
+      "answer": "The endpoint stays thin: verify the signature against the raw request body, exclude it from CSRF checks, store the raw payload in an incoming events table and return 200 immediately — otherwise the provider starts retrying.\n\nThe processing happens in a queued job. Idempotency is mandatory: the event id is stored with a unique index and a repeat delivery is ignored. Events can also arrive out of order, so I drive the payment state machine explicitly instead of trusting the sequence. On top of that, alerts on unprocessed events and the ability to replay from the stored payload."
+    },
+    "api-security-07": {
+      "prompt": "Which HTTP status does Laravel return when a Form Request fails validation on a JSON request?",
+      "options": ["400", "401", "422", "500"],
+      "answer": "422"
+    },
+    "api-security-08": {
+      "prompt": "Which snippet is vulnerable to SQL injection?",
+      "options": [
+        "User::where('email', $request->email)->first()",
+        "DB::select('select * from users where email = ?', [$request->email])",
+        "DB::table('users')->whereRaw(\"email = '{$request->email}'\")->get()",
+        "DB::table('users')->where('email', $request->email)->get()"
+      ],
+      "answer": "DB::table('users')->whereRaw(\"email = '{$request->email}'\")->get()"
+    },
+    "api-security-09": {
+      "prompt": "What does the CSRF middleware do, and which requests does it verify?",
+      "options": [
+        "It verifies the token for every request, including GET",
+        "It verifies the token only for state changing requests: POST, PUT, PATCH, DELETE",
+        "It encrypts form data",
+        "It validates the JWT signature"
+      ],
+      "answer": "It verifies the token only for state changing requests: POST, PUT, PATCH, DELETE"
+    },
+    "api-security-10": {
+      "prompt": "What are API resources for, and why are they better than returning a model directly?",
+      "answer": "A resource is the layer that turns a model into a response. It fixes the contract: which fields you expose, what they are called, how dates and nested entities are formatted. Returning a model directly is risky — the next migration adds a column and it leaks into the response automatically.\n\nResources also give you conditional fields, collections with metadata, consistent pagination and room for versioning. Hiding fields on the model works too, but then the model carries responsibility for presentation."
+    },
+    "api-security-11": {
+      "prompt": "How do you integrate with an external HTTP API that is sometimes slow or down?",
+      "answer": "Always set a connect timeout and a request timeout, retry with exponential backoff and jitter, and only retry what makes sense — not 4xx, except 429 where I respect Retry-After. Responses get cached where that is safe, and slow calls move into a queue so the user request does not hang.\n\nFor repeated failures I add a circuit breaker and return a degraded response. Everything is logged with a correlation id and monitored. In tests the HTTP client is faked, including timeout and error cases."
+    },
+    "api-security-12": {
+      "prompt": "User A requests an order that belongs to user B and gets the data. What kind of vulnerability is that?",
+      "options": [
+        "XSS",
+        "CSRF",
+        "IDOR, broken object level authorisation",
+        "SSRF"
+      ],
+      "answer": "IDOR, broken object level authorisation"
+    }
+  }
+}

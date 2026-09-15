@@ -1,0 +1,53 @@
+{
+  "locale": "en",
+  "questions": {
+    "english-interview-01": { "prompt": "Tell me about yourself." },
+    "english-interview-02": { "prompt": "Walk me through the architecture of your last project." },
+    "english-interview-03": { "prompt": "Explain the N+1 problem to a product manager who does not write code." },
+    "english-interview-04": { "prompt": "Tell me about a time you disagreed with a teammate. How did you handle it?" },
+    "english-interview-05": { "prompt": "What are your salary expectations?" },
+    "english-interview-06": { "prompt": "What do you say when you did not understand the interviewer's question?" },
+    "english-interview-07": { "prompt": "How do you admit you have never worked with something, without losing credibility?" },
+    "english-interview-08": { "prompt": "Do you have any questions for us?" },
+    "english-interview-09": { "prompt": "Shadowing. Read the model out loud three times: slowly, then at speaking pace, then without looking at the end of each phrase. Mind the pauses." },
+    "english-interview-10": { "prompt": "Shadowing. Say the trade-off block out loud, then repeat it with your own project in it." },
+    "english-interview-11": { "prompt": "Shadowing. Practise the phrases you say while thinking and writing code in a live coding session." },
+    "english-interview-12": { "prompt": "Shadowing. Rehearse the first thirty seconds of the call — they set the tone for everything after." },
+    "english-interview-13": { "prompt": "Fill in the gap: I was ___ for the payment module and the integration with the bank." },
+    "english-interview-14": { "prompt": "Fill in the gap: Let me ___ you through the architecture step by step." },
+    "english-interview-15": { "prompt": "Fill in the gap: The main trade-___ was between read speed and consistency." },
+    "english-interview-16": { "prompt": "Fill in the gap: We ___ into a race condition when two workers processed the same order." },
+    "english-interview-17": { "prompt": "Fill in the gap: We ___ the response time by forty percent after reworking the queries." },
+    "english-interview-18": { "prompt": "Fill in the gap: I've ___ working with Laravel since 2021 — the tense for experience that is still going on." },
+    "english-interview-19": { "prompt": "Fill in the gap: Could you ___ the question, please? I want to make sure I understood it correctly." },
+    "english-interview-20": { "prompt": "Fill in the gap: I'd like to ___ up on what you said about the release process." },
+    "english-interview-21": {
+      "prompt": "You have been working at your current company since 2022. Which sentence is correct?",
+      "options": [
+        "I work here since 2022",
+        "I am working here since 2022",
+        "I have been working here since 2022",
+        "I worked here since 2022"
+      ]
+    },
+    "english-interview-22": {
+      "prompt": "The interviewer asks about experience you do not have. Which answer is strongest?",
+      "options": [
+        "Sorry, my knowledge of this is very bad",
+        "Yes, I know it well (followed by vague generalities)",
+        "I haven't worked with it in production, but here's how I'd approach it",
+        "I don't know"
+      ]
+    },
+    "english-interview-23": {
+      "prompt": "Which phrase works when you need a few seconds to think?",
+      "options": [
+        "Wait, wait, I think",
+        "That's a good question — let me think for a second",
+        "Emmm… how to say…",
+        "One minute please, I need translate"
+      ]
+    },
+    "english-interview-24": { "prompt": "How do you prepare for an interview in English in two weeks if you have not used the language for a while?" }
+  }
+}

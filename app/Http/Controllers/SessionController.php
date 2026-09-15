@@ -24,8 +24,9 @@ class SessionController extends Controller
     public function store(Request $request, Trainee $trainee): RedirectResponse
     {
         $data = $request->validate([
-            'mode' => ['required', 'in:screening,tech_interview,quiz,drill'],
+            'mode' => ['required', 'in:screening,tech_interview,quiz,drill,english_interview'],
             'level' => ['nullable', 'in:junior,middle,senior'],
+            'language' => ['nullable', 'in:ru,en'],
             'topics' => ['nullable', 'array'],
             'topics.*' => ['integer', 'exists:topics,id'],
             'size' => ['nullable', 'integer', 'min:3', 'max:30'],
@@ -34,6 +35,7 @@ class SessionController extends Controller
         try {
             $session = $this->builder->create($trainee, SessionMode::from($data['mode']), [
                 'level' => $data['level'] ?? null,
+                'language' => $data['language'] ?? null,
                 'topics' => $data['topics'] ?? [],
                 'size' => $data['size'] ?? 10,
             ]);
@@ -61,9 +63,12 @@ class SessionController extends Controller
             return redirect()->route('sessions.report', $session);
         }
 
+        $item->load('question.topic', 'question.translations');
+
         return view('sessions.show', [
             'session' => $session,
-            'item' => $item->load('question.topic'),
+            'item' => $item,
+            'text' => $item->question->in($session->language()),
             'answered' => $session->answeredCount(),
             'total' => $session->items()->count(),
         ]);
@@ -112,7 +117,7 @@ class SessionController extends Controller
         }
 
         return view('sessions.report', [
-            'session' => $session->load('items.question.topic'),
+            'session' => $session->load('items.question.topic', 'items.question.translations'),
             'advice' => $report->advice($session),
         ]);
     }

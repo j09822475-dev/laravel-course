@@ -1,0 +1,49 @@
+{
+  "locale": "en",
+  "questions": {
+    "architecture-01": {
+      "prompt": "Tell me about SOLID with examples from a Laravel project.",
+      "answer": "Single responsibility: the controller takes the request, a form request validates, a service runs the use case, a resource shapes the response. Open closed: a new payment method is a new implementation of an interface, not an edit to existing code. Liskov: a child must not tighten the contract — the classic smell is an inherited method that throws.\n\nInterface segregation: several narrow contracts beat one fat interface nobody implements fully. Dependency inversion: services depend on interfaces and the container supplies the implementation. I treat SOLID as guidance rather than dogma — a premature abstraction costs as much as a missing one."
+    },
+    "architecture-02": {
+      "prompt": "Which design patterns have you actually used? Give examples rather than definitions.",
+      "answer": "Strategy for payment and delivery providers behind one interface. Factory for building report objects by type. Observer is Laravel's events and listeners. Decorator for a caching wrapper around a repository or an API client. Adapter to wrap a vendor SDK so its types do not leak everywhere.\n\nCommand is essentially a queued job, builder is the query builder, and template method is an abstract importer with shared steps. The point I try to make is that a pattern solves a concrete coupling or duplication problem — it is not applied for the name."
+    },
+    "architecture-03": {
+      "prompt": "Design a URL shortener: API, storage, redirects, statistics. The load is a thousand redirects per second.",
+      "answer": "The API is a create endpoint that takes a URL and an optional alias and returns a code, a redirect endpoint, and a stats endpoint. I generate the code from an incremental id in base62, or randomly with a uniqueness check, and validate custom aliases.\n\nStorage is a links table with a unique code. The redirect is the hot path, so code to URL lives in Redis with a long TTL, warmed on creation, falling back to the database on a miss. I would use a temporary redirect rather than a permanent one, because browsers cache permanent redirects forever and the statistics disappear.\n\nClicks are not written synchronously: a counter in Redis and events buffered into a queue, aggregated by a background job. On top of that, rate limiting on creation, URL validation against open redirects and phishing, expiry, and stateless application servers behind a load balancer."
+    },
+    "architecture-04": {
+      "prompt": "In an online shop you need to reserve stock during checkout so the same item is never sold twice. How do you design it?",
+      "answer": "The core problem is the race between two concurrent checkouts. The simplest reliable fix is an atomic update that decrements the quantity with a condition that it is still available, then checking the number of affected rows. Alternatives are a row lock inside a transaction, or a separate reservations table with an expiry.\n\nFor a cart I take reservations with a time to live: when checkout starts we reserve for fifteen minutes, a successful payment converts it into a real decrement, and a cancellation or timeout releases it from a scheduled job. The transaction stays short, the payment gateway call happens outside it, and the confirmation is idempotent so a repeated webhook cannot double charge. I would also think about what the user sees when the item is gone."
+    },
+    "architecture-05": {
+      "prompt": "Monolith or microservices for a new product? How do you argue it?",
+      "answer": "For a new product I almost always start with a well structured modular monolith: module boundaries in namespaces and contracts, one database, one deployment. The reason is cost — microservices bring distributed transactions, network failures, contract versioning and harder debugging, and they only pay off with several teams and parts that scale differently.\n\nWhat is worth extracting is something with a genuinely different profile — video processing, document generation, an integration gateway — and a clean boundary. The argument I make is about cost and criteria, not fashion."
+    },
+    "architecture-06": {
+      "prompt": "How do you approach refactoring legacy code that cannot be paused?",
+      "answer": "The rule is that refactoring must not change behaviour. First the safety net: characterisation tests around current behaviour, logging and metrics. Then small steps, each in its own pull request and each revertible.\n\nThe techniques are the strangler pattern — new code beside the old with traffic moved over behind feature flags — extracting services out of controllers, and introducing interfaces at the boundaries. Schema changes go in compatible steps. I prioritise by pain: the code that changes often and breaks often, not the code that is merely ugly. And I frame it for the business as speed of change and number of incidents."
+    },
+    "architecture-07": {
+      "prompt": "A class creates a concrete payment client with new inside its method. Which principle does that break first?",
+      "options": [
+        "Single responsibility",
+        "Dependency inversion",
+        "Liskov substitution",
+        "Interface segregation"
+      ],
+      "answer": "Dependency inversion"
+    },
+    "architecture-08": {
+      "prompt": "What problem does the transactional outbox pattern solve?",
+      "options": [
+        "It makes database writes faster",
+        "It guarantees the message to an external system is sent exactly when the database transaction commits",
+        "It allows rolling back HTTP requests",
+        "It replaces job queues"
+      ],
+      "answer": "It guarantees the message to an external system is sent exactly when the database transaction commits"
+    }
+  }
+}

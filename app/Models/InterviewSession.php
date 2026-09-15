@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\Language;
 use App\Enums\SessionMode;
 use App\Enums\SessionStatus;
 use Illuminate\Database\Eloquent\Builder;
@@ -58,5 +59,11 @@ class InterviewSession extends Model
     public function isCompleted(): bool
     {
         return $this->status === SessionStatus::Completed;
+    }
+
+    /** Язык, на котором проходит сессия. */
+    public function language(): Language
+    {
+        return Language::tryFrom($this->config['language'] ?? '') ?? $this->mode->language();
     }
 }

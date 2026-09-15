@@ -2,11 +2,13 @@
 
 namespace App\Services;
 
+use App\Enums\QuestionType;
 use App\Enums\SelfRating;
 use App\Enums\SessionStatus;
 use App\Models\InterviewSession;
 use App\Models\SessionItem;
 use App\Models\Trainee;
+use App\Support\AnswerMatcher;
 
 /**
  * Принимает ответ кандидата, оценивает его и закрывает сессию, когда вопросы кончились.
@@ -24,7 +26,14 @@ class SessionGrader
         $rating = null;
         $isCorrect = null;
 
-        if ($question->isAutoGraded()) {
+        if ($question->type === QuestionType::Cloze) {
+            // Пропуск кандидат вписывает сам: сверяем со списком допустимых вариантов.
+            $isCorrect = AnswerMatcher::matches(
+                $payload['answer'] ?? null,
+                array_merge($question->accepted ?? [], [$question->answer]),
+            );
+            $rating = $isCorrect ? SelfRating::Confident : SelfRating::Failed;
+        } elseif ($question->isAutoGraded()) {
             $selected = $payload['option'] ?? null;
             $isCorrect = $selected !== null && (int) $selected === (int) $question->correct_option;
             $rating = $isCorrect ? SelfRating::Confident : SelfRating::Failed;

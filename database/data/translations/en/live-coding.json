@@ -1,0 +1,37 @@
+{
+  "locale": "en",
+  "questions": {
+    "live-coding-01": {
+      "prompt": "Write a method that takes a collection of orders and returns the total per customer, sorted descending. Talk through your solution the way you would in an interview.",
+      "answer": "With Laravel collections you group by the customer, map each group to the sum of its totals and sort descending.\n\nIf the data set is large this belongs in the database instead: select the customer and the sum, group by the customer, order by the sum descending.\n\nWhat matters in the interview is saying out loud where the aggregation happens — PHP or the database — what happens with a million rows, whether money should be integers in minor units rather than floats, and asking what the input actually looks like."
+    },
+    "live-coding-02": {
+      "prompt": "Find the problems in this controller: it loads all posts, loops over them, checks whether the author is active and builds an array for the JSON response.",
+      "answer": "The problems are: loading the entire table into memory instead of paginating and selecting only the needed columns; a classic N+1, because the author relation is fetched per post; filtering active authors in PHP when the database should do it; hand-built response arrays instead of an API resource; and no authorisation or handling of a missing author on a nullable relation.\n\nThe rewrite selects the needed columns, filters by a whereHas on the author, eager loads the author with only id and name, paginates, and returns a resource collection. On top of that, an index on the author foreign key, and a join instead of whereHas if the query turns out to be heavy."
+    },
+    "live-coding-03": {
+      "prompt": "Write SQL: list the emails of users with more than three orders in the last thirty days, plus the total of those orders, largest first.",
+      "answer": "Join users to orders, filter the date range and the paid status in the WHERE clause, group by the user, keep groups with a count above three in the HAVING clause, and order by the summed total descending.\n\nThe key points are knowing that the row filter goes in WHERE and the group filter in HAVING, grouping by the right set of columns, wanting an index on user id and created date, and asking the interviewer which order statuses count."
+    },
+    "live-coding-04": {
+      "prompt": "Implement a service that credits cashback to a user balance after an order is paid, without double crediting on a repeated call.",
+      "answer": "The idea is that the operation is idempotent on the order id, with a ledger entry protected by a unique index.\n\nInside a transaction I lock the user row, create the balance transaction with firstOrCreate keyed on the source type and source id, return early if it already existed, and otherwise increment the balance atomically.\n\nThe details that matter: it is the unique index in the database, not a check in PHP, that prevents duplicates under a race; money is stored in whole minor units; there is a ledger rather than just a balance column, so the amount can be audited; and the notification is sent after the commit."
+    },
+    "live-coding-05": {
+      "prompt": "Write a function that checks whether a string is a palindrome, ignoring case and non-letter characters. Handle non-Latin alphabets.",
+      "answer": "Strip everything that is not a letter or a digit with a unicode aware regular expression, lowercase it in a multibyte safe way, then compare the string with its reverse — also built with multibyte functions, because the naive reverse and lowercase break on non-Latin text.\n\nThe interview points are unicode handling, the linear time and memory complexity, the alternative two-pointer version that avoids building a second string, and the edge cases: empty string, single character, a string made only of punctuation."
+    },
+    "live-coding-06": {
+      "prompt": "What is wrong with this transfer method: it checks the balance, subtracts from one user, saves, adds to the other, saves, and sends an email?",
+      "answer": "There is no transaction, so a failure between the two saves leaves the money debited but never credited. There is a race: two concurrent transfers read the same balance and can push it negative — a lost update. The email is sent synchronously inside the flow, so it goes out even if the transaction rolls back, and a mail server outage breaks the transfer. Failing silently when funds are insufficient hides the failure from the caller. And there is no ledger and no idempotency.\n\nThe fix is a transaction with a row lock or atomic increment and decrement, an exception when funds are insufficient, a ledger entry, and the email dispatched as a queued job after the commit. Rows should also be locked in a consistent order to avoid deadlocks on simultaneous opposite transfers."
+    },
+    "live-coding-07": {
+      "prompt": "Write a feature test: a guest cannot create a post, an authenticated user can, and nobody can edit someone else's post.",
+      "answer": "Three tests. The first posts as a guest and expects unauthorised. The second acts as a factory-made user, posts valid data, expects created, checks a field in the JSON and asserts the row exists with that user id. The third creates a post owned by one user, acts as another, sends the update and expects forbidden, then asserts the change did not reach the database.\n\nThe things being assessed are using the refresh database trait and factories instead of manual inserts, asserting both the response and the database state, covering the negative paths — unauthorised, forbidden, validation — and keeping each test independent."
+    },
+    "live-coding-08": {
+      "prompt": "Design and write the migration and models for tags that can be attached to both posts and products.",
+      "answer": "A polymorphic many to many relation. One tags table with a unique slug, and a pivot table holding the tag id plus the morph columns for the taggable id and type, with a composite primary key so the same tag cannot be attached twice.\n\nOn the tag side the relations are defined as morphed by many for posts and products, and each of those models declares a morph to many relation to tags.\n\nThe nuances worth mentioning: the morph helper creates the needed index, you cannot put a foreign key on the polymorphic id — that is the price of polymorphism and integrity has to be kept in code — slugs are normalised, attaching is done with sync or attach, and a usage counter can be denormalised if tag clouds are needed."
+    }
+  }
+}

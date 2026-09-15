@@ -1,0 +1,61 @@
+{
+  "locale": "en",
+  "questions": {
+    "frontend-01": {
+      "prompt": "What is the difference between var, let and const? What are hoisting and block scope?",
+      "answer": "var is function scoped and hoisted with an undefined value. let and const are block scoped and sit in the temporal dead zone until the declaration, so touching them earlier throws. const prevents reassigning the binding, not mutating the object.\n\nIn practice I use const by default, let when the value changes, and never var. The classic example is a loop with setTimeout: with var every callback sees the last value, with let each iteration gets its own."
+    },
+    "frontend-02": {
+      "prompt": "How does the JavaScript event loop work? What is the difference between microtasks and macrotasks?",
+      "answer": "JavaScript runs on one thread with a call stack and a task queue, and the event loop picks up the next task once the stack is empty. Timers, network calls and events are handled outside the stack and put their callbacks in a queue.\n\nMicrotasks — promises, queueMicrotask — run right after the current synchronous work and before the next macrotask, which is why a resolved promise callback runs before a zero delay timeout. This matters when you do not want to block the interface with heavy work."
+    },
+    "frontend-03": {
+      "prompt": "Blade, Livewire or Inertia with Vue — how do you choose for a new project?",
+      "answer": "Blade is server rendered: fast, SEO friendly, almost no JavaScript, and it fits content pages and simple forms. Livewire gives interactivity without writing JavaScript, since the component lives on the server — great for CRUD admin panels, but sensitive to network latency and chatty round trips.\n\nInertia with Vue or React gives a real single page feel while routing and controllers stay in Laravel. A separate API with a standalone SPA is worth it when you have several clients — web, mobile, integrations. I choose from interface complexity and the team, not from fashion."
+    },
+    "frontend-04": {
+      "prompt": "What are Blade components and slots, and what is the difference between escaped and raw output?",
+      "answer": "Blade compiles to PHP and is cached. Components, class based or anonymous, let you reuse markup with props and slots, and an attribute bag forwards classes and attributes.\n\nEscaped output runs through the escaping helper and protects against XSS; raw output is only for trusted or sanitised HTML. There are also directives for the CSRF field and for method spoofing, because browsers only send GET and POST, plus stacks for pushing scripts from a child view."
+    },
+    "frontend-05": {
+      "prompt": "How does frontend building work in Laravel with Vite? What do you do in production?",
+      "answer": "In development Vite serves modules directly with hot replacement, and the Blade directive points at the dev server. For production the build produces hashed bundles and a manifest, and the same directive reads the manifest to emit the right files.\n\nOn deploy you run the build, or build in CI and ship the artifact; the build folder is not committed. Frontend variables need the Vite prefix — and they end up in the client bundle, so no secrets there. Cache busting comes free from the hashed file names."
+    },
+    "frontend-06": {
+      "prompt": "Vue 3: what is the difference between ref and reactive, and what are computed and watch?",
+      "answer": "ref wraps any value, including primitives, and you reach it through its value property, unwrapped automatically in the template. reactive makes a whole object reactive through a proxy, but destructuring loses the reactivity and primitives are not supported.\n\ncomputed is a cached derived value that only recalculates when its dependencies change — that is what belongs in templates. watch is for side effects: API calls, syncing with storage. My default is ref plus computed, and watch only when there really is an effect."
+    },
+    "frontend-07": {
+      "prompt": "What does console.log(typeof null) print?",
+      "options": ["'null'", "'object'", "'undefined'", "'number'"],
+      "answer": "'object'"
+    },
+    "frontend-08": {
+      "prompt": "What happens if you render a user comment with unescaped output in Blade?",
+      "options": [
+        "Nothing, Blade escapes output anyway",
+        "XSS becomes possible: the HTML and scripts execute",
+        "The template fails to compile",
+        "The comment is printed as text with visible tags"
+      ],
+      "answer": "XSS becomes possible: the HTML and scripts execute"
+    },
+    "frontend-09": {
+      "prompt": "In which order are the lines printed: console.log('1'); setTimeout(() => console.log('2')); Promise.resolve().then(() => console.log('3')); console.log('4');",
+      "options": ["1 2 3 4", "1 4 3 2", "1 4 2 3", "1 3 4 2"],
+      "answer": "1 4 3 2"
+    },
+    "frontend-10": {
+      "prompt": "How do you optimise page load, and what do you measure?",
+      "answer": "I measure Core Web Vitals — largest contentful paint, interaction to next paint, cumulative layout shift — plus time to first byte for the server side, using lab tools and real user data.\n\nThe usual work: fix slow queries and add server caching for TTFB, compress images and use modern formats with explicit dimensions and lazy loading, split the bundle and defer scripts, inline critical CSS, preload fonts with a swap fallback, and put a CDN with proper cache headers in front. The rule is to measure first and find the bottleneck rather than optimising blindly."
+    },
+    "frontend-11": {
+      "prompt": "How do you organise forms — client and server validation, error handling?",
+      "answer": "Client side validation is user experience, server side is the source of truth, because the client can always be bypassed. I try not to duplicate rules by hand but derive them from one description or at least keep them side by side.\n\nThe server returns 422 with per-field errors, and the frontend shows them next to the inputs, with a general message for a 500. I also handle the states: disable the submit button while sending, guard against double submission on the server, keep the entered values on error, write human messages, and keep accessibility in mind — labels tied to inputs and focus on the first invalid field."
+    },
+    "frontend-12": {
+      "prompt": "You need to show progress of a long running server operation. What are the options and what would you pick?",
+      "answer": "Short polling is simple and reliable but costs extra requests; long polling is similar. Server-sent events give a cheap one-way stream that fits progress well. WebSockets through a broadcasting service give two-way real time but add infrastructure and channel authorisation.\n\nFor an import progress bar polling every couple of seconds is usually enough. If the product already has a real time channel for notifications, I reuse broadcasting on a private channel. The key point is that the state lives in the database — the transport is secondary."
+    }
+  }
+}

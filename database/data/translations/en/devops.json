@@ -1,0 +1,55 @@
+{
+  "locale": "en",
+  "questions": {
+    "devops-01": {
+      "prompt": "Describe how you deploy a Laravel application with no downtime.",
+      "answer": "The artifact is built in CI: dependencies without dev packages and an optimised autoloader, the frontend build, and the test suite. The release goes into a new directory with symlinks to shared storage and the environment file, and switching the current symlink makes the release live — which also makes rollback a symlink switch back.\n\nThe order is migrations that are compatible with the previous version, then rebuilding the config, route, view and event caches, then restarting the PHP processes and the queue workers so they pick up the new code. After that a health check, and an automatic rollback if it fails. Maintenance mode with a secret is for exceptional cases."
+    },
+    "devops-02": {
+      "prompt": "How do you set up a development environment — Docker, or a native tool?",
+      "answer": "For a team Docker Compose is easier, or Laravel Sail as a ready-made wrapper: php-fpm, nginx, the database, Redis, a mail catcher, and separate containers for the worker and the scheduler. Everyone gets the same environment, close to production, and a newcomer starts with one command.\n\nThe details that matter are a multi-stage Dockerfile with dependencies in a builder layer, layer caching keyed on the lock files, a separate worker container, storage permissions, mounting code in development but copying it into the image for production, and a dockerignore file. A native tool is faster for solo work on macOS but further from production."
+    },
+    "devops-03": {
+      "prompt": "How do you work with git in a team — branches, review, conflicts?",
+      "answer": "Usually trunk based or GitHub flow: short lived branches off main, small pull requests, mandatory review and green CI before merging. Commits are atomic with meaningful messages.\n\nI resolve conflicts by rebasing onto a fresh main often; my own unpublished branches get rebased, shared branches get merged, and I never rewrite someone else's history. Bisect is how I find the commit that broke something, cherry-pick moves a hotfix, tags mark releases. But the agreements matter more than the mechanics: small pull requests, a clear description, review within a day, a defined hotfix procedure."
+    },
+    "devops-04": {
+      "prompt": "Production went down overnight and users see 500 errors. Walk me through what you do.",
+      "answer": "First assess the blast radius: everyone or a subset, which endpoints, when it started — from monitoring, application and web server logs, error tracking, database and queue metrics. Then restore service before hunting for the cause: roll back if the release broke it, degrade gracefully if an external dependency is down.\n\nI communicate status to the team and, if needed, to users. Once it is stable, the real work: reproduce, find the root cause, write a test that covers it and a blameless postmortem with concrete actions. The usual suspects I check immediately are disk space, a forgotten worker restart, a migration, storage permissions, connection pool exhaustion and external API limits."
+    },
+    "devops-05": {
+      "prompt": "How are logging and monitoring set up in your projects?",
+      "answer": "Structured logs with levels, context and a correlation id, written to standard output in containers or to rotated files, with separate channels for different subsystems. Errors go to an error tracker grouped by release.\n\nMetrics: response time and error rates, queue depth and job wait time, slow queries, CPU, memory and disk, and a heartbeat for the scheduler. Dashboards plus alerts only on things that need action at night. Laravel adds its own tooling for local debugging and queue monitoring. And no personal data, passwords or tokens in the logs."
+    },
+    "devops-06": {
+      "prompt": "Which command must you run after deploying new code so that queue workers use it?",
+      "options": [
+        "php artisan cache:clear",
+        "php artisan queue:restart",
+        "php artisan config:cache",
+        "php artisan optimize"
+      ],
+      "answer": "php artisan queue:restart"
+    },
+    "devops-07": {
+      "prompt": "Which of these must NOT go into the git repository?",
+      "options": [
+        "composer.lock",
+        "The .env file with real keys",
+        "The .env.example file",
+        "Database migrations"
+      ],
+      "answer": "The .env file with real keys"
+    },
+    "devops-08": {
+      "prompt": "An application in Docker writes logs to a file inside the container. What is the main problem?",
+      "options": [
+        "The logs get duplicated",
+        "The logs disappear when the container is recreated and are hard to collect centrally",
+        "Docker forbids writing to files",
+        "It makes the application faster"
+      ],
+      "answer": "The logs disappear when the container is recreated and are hard to collect centrally"
+    }
+  }
+}

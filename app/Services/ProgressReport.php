@@ -121,10 +121,43 @@ class ProgressReport
             );
         }
 
+        if ($session->language()->isEnglish()) {
+            $advice = array_merge($advice, $this->languageAdvice($items));
+        }
+
         $confident = $items->filter(fn (SessionItem $item) => ($item->self_rating ?? 0) === 3)->count();
 
         if ($confident / max($items->count(), 1) >= 0.8) {
             $advice[] = 'Уровень уверенный: попробуйте следующий грейд или полное техническое интервью на 60 минут.';
+        }
+
+        return $advice;
+    }
+
+    /**
+     * Рекомендации для сессии на английском: там узкое место обычно не в знаниях,
+     * а в скорости формулирования и в отработанности речевых блоков.
+     *
+     * @param  Collection<int, SessionItem>  $items
+     * @return list<string>
+     */
+    protected function languageAdvice(Collection $items): array
+    {
+        $advice = [];
+
+        $drills = $items->filter(fn (SessionItem $item) => $item->question->type->isLanguageDrill());
+        $failedDrills = $drills->filter(fn (SessionItem $item) => ($item->self_rating ?? 0) <= 1);
+
+        if ($failedDrills->isNotEmpty()) {
+            $advice[] = Plural::count($failedDrills->count(), 'речевой блок не вспомнился', 'речевых блока не вспомнились', 'речевых блоков не вспомнились')
+                .' — проговорите их вслух несколько раз подряд, это отрабатывается быстрее всего.';
+        }
+
+        $speaking = $items->filter(fn (SessionItem $item) => ! $item->question->type->isLanguageDrill());
+        $overtime = $speaking->filter(fn (SessionItem $item) => $item->seconds_spent > $item->question->estimated_seconds);
+
+        if ($speaking->isNotEmpty() && $overtime->count() >= max(1, (int) ceil($speaking->count() / 2))) {
+            $advice[] = 'На неродном языке ответы дольше — это нормально. Сократите их до одного каркаса из трёх предложений и отрепетируйте вслух.';
         }
 
         return $advice;

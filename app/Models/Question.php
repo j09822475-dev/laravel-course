@@ -3,7 +3,9 @@
 namespace App\Models;
 
 use App\Enums\Difficulty;
+use App\Enums\Language;
 use App\Enums\QuestionType;
+use App\Support\QuestionText;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -16,8 +18,8 @@ class Question extends Model
 
     protected $fillable = [
         'topic_id', 'external_id', 'type', 'difficulty', 'prompt', 'answer',
-        'explanation', 'options', 'correct_option', 'follow_ups', 'checklist',
-        'red_flags', 'tags', 'estimated_seconds',
+        'explanation', 'options', 'correct_option', 'accepted', 'follow_ups',
+        'checklist', 'red_flags', 'tags', 'estimated_seconds',
     ];
 
     protected function casts(): array
@@ -26,6 +28,7 @@ class Question extends Model
             'type' => QuestionType::class,
             'difficulty' => Difficulty::class,
             'options' => 'array',
+            'accepted' => 'array',
             'follow_ups' => 'array',
             'checklist' => 'array',
             'red_flags' => 'array',
@@ -41,6 +44,55 @@ class Question extends Model
     public function sessionItems(): HasMany
     {
         return $this->hasMany(SessionItem::class);
+    }
+
+    public function translations(): HasMany
+    {
+        return $this->hasMany(QuestionTranslation::class);
+    }
+
+    /** Текст вопроса на нужном языке с откатом на русский оригинал. */
+    public function in(Language|string $language): QuestionText
+    {
+        $language = $language instanceof Language ? $language : Language::from($language);
+
+        $translation = $language === Language::Ru
+            ? null
+            : $this->translations->firstWhere('locale', $language->value);
+
+        if (! $translation) {
+            return new QuestionText(
+                language: $language,
+                prompt: $this->prompt,
+                answer: $this->answer,
+                explanation: $this->explanation,
+                options: $this->options,
+                followUps: $this->follow_ups,
+                translated: $language === Language::Ru,
+            );
+        }
+
+        return new QuestionText(
+            language: $language,
+            prompt: $translation->prompt,
+            answer: $translation->answer,
+            explanation: $translation->explanation ?? $this->explanation,
+            options: $translation->options ?? $this->options,
+            followUps: $translation->follow_ups ?? $this->follow_ups,
+            translated: true,
+        );
+    }
+
+    /** Есть ли перевод на указанный язык. */
+    public function scopeTranslatedInto(Builder $query, Language|string $language): Builder
+    {
+        $locale = $language instanceof Language ? $language->value : $language;
+
+        if ($locale === Language::Ru->value) {
+            return $query;
+        }
+
+        return $query->whereHas('translations', fn (Builder $q) => $q->where('locale', $locale));
     }
 
     public function scopeOfType(Builder $query, QuestionType|string $type): Builder
@@ -69,6 +121,16 @@ class Question extends Model
 
     public function isAutoGraded(): bool
     {
+        if ($this->type === QuestionType::Cloze) {
+            return filled($this->accepted) || filled($this->answer);
+        }
+
         return $this->type->isAutoGraded() && $this->correct_option !== null;
+    }
+
+    /** Вопрос с вариантами ответа, где нужно выбрать один. */
+    public function hasOptions(): bool
+    {
+        return $this->type === QuestionType::Quiz && filled($this->options);
     }
 }

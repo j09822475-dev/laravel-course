@@ -26,6 +26,7 @@ class Topic extends Model
             'architecture' => 'Архитектура',
             'devops' => 'DevOps',
             'soft' => 'Коммуникация',
+            'language' => 'Английский',
             default => $this->area,
         };
     }

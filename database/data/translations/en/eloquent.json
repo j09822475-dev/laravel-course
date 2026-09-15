@@ -1,0 +1,75 @@
+{
+  "locale": "en",
+  "questions": {
+    "eloquent-01": {
+      "prompt": "Which relationship types does Eloquent have, and how do they look in the database schema?",
+      "answer": "hasOne and belongsTo put the foreign key on the child side. hasMany with belongsTo is one to many. belongsToMany is many to many through a pivot table with two foreign keys, and you read extra pivot columns explicitly. hasOneThrough and hasManyThrough reach across an intermediate model. The morph relations store an id and a type column, and morphToMany covers polymorphic many to many, which is how tags are usually built.\n\nThere is also hasOneOfMany — latestOfMany, for example the customer's most recent order in a single query."
+    },
+    "eloquent-02": {
+      "prompt": "What is the N+1 problem, and how do you find and fix it?",
+      "answer": "N+1 is when a list of N records triggers one extra query per relation: one query for the posts and N for the authors. The fix is eager loading with with, load for an existing collection, withCount for counters, and constrained eager loading when you only need part of a relation.\n\nI find it with Debugbar, Telescope or the query log, and I guard against it by preventing lazy loading in development and in tests, so an accidental lazy load throws instead of quietly costing queries."
+    },
+    "eloquent-03": {
+      "prompt": "How is an Eloquent model different from the query builder, and when do you drop models?",
+      "answer": "The query builder returns plain objects and does not hydrate models, so it is faster and lighter. Eloquent gives you relations, casts, accessors, events, scopes and soft deletes, but every row becomes an object.\n\nI drop models for bulk work: reports, aggregates, mass upserts, exporting millions of rows. There I select specific columns and use chunkById. The thing to remember is that bulk operations do not fire model events and do not touch updated_at unless you say so."
+    },
+    "eloquent-04": {
+      "prompt": "How do transactions work in Laravel? What do you do so that money is never lost?",
+      "answer": "DB::transaction wraps the callback and rolls back on an exception, and there are manual begin, commit and rollback with savepoints for nesting. The key rule is that a transaction stays short — no HTTP calls to a payment gateway inside it.\n\nFor concurrency I use pessimistic locking with lockForUpdate or optimistic locking with a version column. Side effects — emails, queued jobs, webhooks — only happen after the commit. And the operation is idempotent on some key so a repeated request cannot charge twice."
+    },
+    "eloquent-05": {
+      "prompt": "What are fillable and guarded? What is the mass assignment vulnerability?",
+      "answer": "When you create or update from an array, Eloquent only fills allowed attributes. fillable is the allow list, guarded is the deny list. Without them a user could post is_admin equals one with a form and grant themselves rights — that is mass assignment.\n\nThe safe habit is an explicit fillable list plus passing only validated data into the model, never the whole request. forceFill exists for deliberate exceptions such as seeders."
+    },
+    "eloquent-06": {
+      "prompt": "Tell me about scopes, accessors and casts in modern Laravel.",
+      "answer": "A local scope is a method on the model you call as a query condition. A global scope applies to every query for that model — tenant filtering, for instance — and can be removed per query. Accessors and mutators are written as a single Attribute method since Laravel 9.\n\nCasts convert a column into the type you want: datetime, array, encrypted, an enum class, or a custom cast into a value object. Soft deletes are themselves a global scope that adds the deleted_at condition."
+    },
+    "eloquent-07": {
+      "prompt": "How would you fetch the latest order for every customer across ten million rows? What are the trade-offs?",
+      "answer": "Options are a correlated subquery or hasOne with latestOfMany, which reads well but needs the right composite index; a window function with ROW_NUMBER partitioned by customer, which usually gives the best plan; DISTINCT ON in PostgreSQL; or denormalising a last_order_id column on the customer, which is the fastest to read but has to be kept in sync.\n\nThe choice depends on how often it is read. For a reporting view I take the window function; for a hot query on every page I denormalise. Either way I check the execution plan and the index."
+    },
+    "eloquent-08": {
+      "prompt": "How do you write migrations so that a deploy does not break a running application?",
+      "answer": "Migrations have to stay backward compatible: first add a nullable column, deploy code that writes to both places, backfill in the background, and only then make it required and drop the old one. Changing or dropping a column in the same release as the code is how you get downtime.\n\nHeavy operations such as adding an index to a large table are done separately with the right tooling — an online schema change, or a concurrent index build in PostgreSQL. Data changes go into dedicated migrations or commands, not production seeders."
+    },
+    "eloquent-09": {
+      "prompt": "What does User::find(999) return when the user does not exist?",
+      "options": ["null", "An empty collection", "ModelNotFoundException", "false"],
+      "answer": "null"
+    },
+    "eloquent-10": {
+      "prompt": "How many SQL queries does Post::with('author')->take(10)->get() plus printing the author name in a loop run?",
+      "options": ["1", "2", "10", "11"],
+      "answer": "2"
+    },
+    "eloquent-11": {
+      "prompt": "How does firstOrCreate differ from updateOrCreate?",
+      "options": [
+        "Both always update the record they find",
+        "firstOrCreate returns the existing record untouched, updateOrCreate also updates it",
+        "firstOrCreate only works with composite keys",
+        "updateOrCreate never creates new records"
+      ],
+      "answer": "firstOrCreate returns the existing record untouched, updateOrCreate also updates it"
+    },
+    "eloquent-12": {
+      "prompt": "A model uses SoftDeletes. What does the unique validation rule on the email column do after that user is soft deleted?",
+      "options": [
+        "It passes: soft deleted rows are ignored",
+        "It fails: the row is still physically in the table",
+        "It depends on the database driver",
+        "Validation throws an exception"
+      ],
+      "answer": "It fails: the row is still physically in the table"
+    },
+    "eloquent-13": {
+      "prompt": "How does pagination work, and how do paginate, simplePaginate and cursorPaginate differ?",
+      "answer": "paginate runs an extra count query and knows the total number of pages. simplePaginate only checks whether there is a next page, so it is cheaper. cursorPaginate uses a cursor on an indexed column instead of an offset.\n\nOn large tables offset degrades because the database still walks the skipped rows, so for feeds and infinite scrolling I use cursor pagination. It stays correct while rows are being inserted, but it needs a unique ordered column and cannot jump to an arbitrary page."
+    },
+    "eloquent-14": {
+      "prompt": "Where do you keep business logic — in the model, the controller, a service or a repository?",
+      "answer": "The controller only accepts the request, calls a use case and shapes the response. The logic of one business scenario goes into a service or action class, and the model stays responsible for data, relations, casts and small derived values.\n\nI only add a repository when there is a real reason — complex queries in one place, several data sources, or a requirement to swap storage. Otherwise it is a layer that buys nothing, because Eloquent is already an implementation of that pattern. The criteria I care about are readability and being able to cover the scenario with a feature test."
+    }
+  }
+}

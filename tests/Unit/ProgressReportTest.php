@@ -2,6 +2,7 @@
 
 namespace Tests\Unit;
 
+use App\Enums\QuestionType;
 use App\Enums\SessionMode;
 use App\Enums\SessionStatus;
 use App\Models\Question;
@@ -95,6 +96,41 @@ class ProgressReportTest extends TestCase
 
         $this->assertCount(1, $weak);
         $this->assertSame('Слабая тема', $weak->first()['topic']->name);
+    }
+
+    public function test_english_session_gets_language_specific_advice(): void
+    {
+        $trainee = Trainee::factory()->create();
+        $topic = Topic::factory()->create(['area' => 'language']);
+
+        $session = $trainee->sessions()->create([
+            'mode' => SessionMode::EnglishInterview,
+            'title' => 'Интервью на английском',
+            'status' => SessionStatus::Completed,
+            'config' => ['language' => 'en'],
+            'started_at' => now(),
+            'completed_at' => now(),
+            'score' => 40,
+        ]);
+
+        $question = Question::factory()->for($topic)->create([
+            'type' => QuestionType::Cloze,
+            'accepted' => ['responsible'],
+        ]);
+
+        $session->items()->create([
+            'question_id' => $question->id,
+            'position' => 1,
+            'phase' => 'drill',
+            'self_rating' => 0,
+            'seconds_spent' => 20,
+            'answered_at' => now(),
+        ]);
+
+        $advice = $this->report->advice($session->refresh());
+
+        $this->assertNotEmpty($advice);
+        $this->assertStringContainsString('речевой блок', implode(' ', $advice));
     }
 
     public function test_summary_counts_completed_sessions(): void

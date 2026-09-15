@@ -1,0 +1,77 @@
+{
+  "locale": "en",
+  "questions": {
+    "databases-01": {
+      "prompt": "What is the difference between an INNER JOIN and a LEFT JOIN, and what happens when you filter a LEFT JOIN column in the WHERE clause?",
+      "answer": "An inner join keeps only rows that match on both sides; a left join keeps every row from the left table and fills the right side with nulls. The classic mistake is putting a condition on the right table in the WHERE clause — it discards the null rows and silently turns the left join into an inner join, so that condition belongs in the ON clause.\n\nTo find rows with no match you use a left join and check that the right side is null — an anti-join."
+    },
+    "databases-02": {
+      "prompt": "How does a B-tree index work and when is it not used?",
+      "answer": "A B-tree is a balanced tree, so lookups take a logarithmic number of reads, and it works well for ranges and ordering. A composite index works left to right, so a condition on the second column alone will not use it.\n\nIt is skipped when you wrap the column in a function, when a LIKE pattern has no fixed prefix, when selectivity is so low that a full scan is cheaper, or when types or collations do not match. I confirm all of this with the execution plan rather than guessing."
+    },
+    "databases-03": {
+      "prompt": "A query suddenly takes eight seconds. Walk me through how you fix it.",
+      "answer": "First I reproduce it on realistic data and read the execution plan: access type, rows examined, sorts and temporary tables. Then I check selectivity and whether a suitable index exists, including column order in a composite one. Then I look at whether I am selecting more rows or columns than needed and whether there are hidden type conversions.\n\nAfter that I rewrite the query — a join instead of queries in a loop, a window function instead of a correlated subquery, EXISTS instead of a large IN, cursor pagination instead of a deep offset. If it is really a reporting query I move it to a replica or precompute it. Caching comes last, and only with a clear invalidation story. Then I compare the plan and the timing before and after."
+    },
+    "databases-04": {
+      "prompt": "Which transaction isolation levels do you know, and which anomalies do they allow?",
+      "answer": "Read uncommitted allows dirty reads. Read committed shows only committed data but allows non-repeatable reads and phantoms — it is the PostgreSQL default. Repeatable read gives you the same result on a repeated read and is the InnoDB default, where gap locks also remove most phantoms. Serializable is full isolation at the cost of locking or aborts.\n\nIn practice for money I use read committed plus an explicit row lock, or optimistic locking with a version column. Higher isolation means more deadlocks and retries, so the code has to be able to retry a transaction."
+    },
+    "databases-05": {
+      "prompt": "When would you choose PostgreSQL over MySQL, and what matters to you?",
+      "answer": "PostgreSQL is stronger on complex queries and types: indexed JSONB, window functions, CTEs, partitioning, extensions, stricter typing, and concurrent index creation. MySQL with InnoDB is simpler to operate and very solid for straightforward high-traffic OLTP work.\n\nIn reality the choice usually follows the team and the infrastructure. For a Laravel application the difference is barely visible day to day, though details differ — strict modes, collation behaviour, transactional DDL in PostgreSQL."
+    },
+    "databases-06": {
+      "prompt": "What do you use Redis for besides caching?",
+      "answer": "Queues with Horizon, sessions, rate limiting and counters, distributed locks so the same job does not run twice, pub/sub for broadcasting, sorted sets for schedulers and leaderboards, and short-lived state such as one-time codes.\n\nI keep in mind that Redis is in memory and persistence is a trade-off, so losing data there has to be acceptable by design. Every key gets a prefix and a TTL, otherwise memory leaks."
+    },
+    "databases-07": {
+      "prompt": "What is the difference between DELETE and TRUNCATE?",
+      "options": [
+        "Nothing, they are synonyms",
+        "TRUNCATE removes all rows faster, usually cannot be rolled back and resets the auto-increment",
+        "DELETE cannot be used with WHERE",
+        "TRUNCATE drops the table together with its structure"
+      ],
+      "answer": "TRUNCATE removes all rows faster, usually cannot be rolled back and resets the auto-increment"
+    },
+    "databases-08": {
+      "prompt": "Given an index on (user_id, created_at), which query does NOT use it efficiently?",
+      "options": [
+        "WHERE user_id = 5",
+        "WHERE user_id = 5 ORDER BY created_at DESC",
+        "WHERE created_at > '2026-01-01'",
+        "WHERE user_id IN (1,2,3) AND created_at > '2026-01-01'"
+      ],
+      "answer": "WHERE created_at > '2026-01-01'"
+    },
+    "databases-09": {
+      "prompt": "Which query correctly returns the number of orders per user, including users with no orders?",
+      "options": [
+        "SELECT u.id, COUNT(*) FROM users u JOIN orders o ON o.user_id = u.id GROUP BY u.id",
+        "SELECT u.id, COUNT(o.id) FROM users u LEFT JOIN orders o ON o.user_id = u.id GROUP BY u.id",
+        "SELECT u.id, COUNT(*) FROM users u LEFT JOIN orders o ON o.user_id = u.id GROUP BY u.id",
+        "SELECT u.id, COUNT(o.id) FROM users u JOIN orders o ON o.user_id = u.id GROUP BY u.id"
+      ],
+      "answer": "SELECT u.id, COUNT(o.id) FROM users u LEFT JOIN orders o ON o.user_id = u.id GROUP BY u.id"
+    },
+    "databases-10": {
+      "prompt": "The orders table has grown to 200 million rows and queries are degrading. What options do you consider?",
+      "answer": "Cheap measures first: revisit indexes and queries, archive old data, narrow the rows, partition by date so old partitions are pruned from the plan. Then split the load — read replicas, a separate store for analytics, materialised views for reports.\n\nOnly after that the architectural steps: sharding by customer or region, splitting hot data from cold history. Each has a price — sharding breaks joins and global uniqueness, replicas add lag, partitioning needs the right key. I decide from the actual workload profile: read or write heavy, which queries dominate the time, what the SLA is."
+    },
+    "databases-11": {
+      "prompt": "What is normalisation, and when do you deliberately denormalise?",
+      "answer": "Normalisation removes duplication and update anomalies — atomic values, no partial dependency on a composite key, no transitive dependencies. That is the baseline for transactional systems.\n\nI denormalise deliberately for reads: counters, cached columns such as last order date, and storing a snapshot of the price and address on the order — that duplication is not a mistake, it records a historical fact. The price is keeping things consistent, through transactions, model events or a periodic recalculation with a drift check."
+    },
+    "databases-12": {
+      "prompt": "Two processes read a balance and then update it to a new value without locking. What is this problem called?",
+      "options": [
+        "Dirty read",
+        "Lost update",
+        "Phantom read",
+        "Deadlock"
+      ],
+      "answer": "Lost update"
+    }
+  }
+}

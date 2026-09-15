@@ -1,0 +1,45 @@
+{
+  "locale": "en",
+  "questions": {
+    "behavioral-01": {
+      "prompt": "Tell me about yourself.",
+      "answer": "A sixty to ninety second shape: who you are now, the experience that matches the role, one or two achievements with numbers, and why this job.\n\nI'm a full stack developer with four years on Laravel and Vue. For the last two years I've been working on a marketplace with around two hundred thousand users, owning the orders and payments module, where I cut checkout time from three seconds to under one. Before that I was in an agency building projects from scratch, which is where I learned to get up to speed quickly. Now I'm looking for a product team where I can own a feature end to end — which is how your team works.\n\nAvoid: retelling your whole CV from university, listing thirty technologies, or talking for five minutes."
+    },
+    "behavioral-02": {
+      "prompt": "Tell me about the hardest technical problem you have solved.",
+      "answer": "Use the STAR shape: the situation and why it mattered to the business, your specific responsibility, what you actually did and which options you weighed, and the measurable result plus what you learned.\n\nA strong answer names a trade-off: we chose denormalisation because reads mattered more than writes, and we paid for it with extra complexity. That shows engineering judgement rather than tool knowledge. A weak answer is a vague there was a lot of legacy and I refactored everything, with no detail and no outcome."
+    },
+    "behavioral-03": {
+      "prompt": "What are your salary expectations?",
+      "answer": "Try not to name a number first: ask what range is budgeted for the role. If they insist, give a range whose lower bound genuinely works for you, anchored on the market and your level, and say that the exact figure depends on the scope of ownership and the working format.\n\nDo not undersell yourself hoping to be liked, and do not use your current salary as the anchor. Ask what the package consists of — base, bonus, overtime, equipment, time off — and justify your number in terms of the value you bring, not your personal needs."
+    },
+    "behavioral-04": {
+      "prompt": "Describe a conflict with a colleague or manager and how you resolved it.",
+      "answer": "Show maturity: the conflict is about the work, not the person. The shape is what the disagreement was, how you surfaced both positions, what facts or data you brought in, what was decided, and what happened to the relationship afterwards.\n\nFor example: the lead wanted a quick hotfix, I saw a data loss risk, so instead of arguing on the call I reproduced it on staging and showed the failure. We shipped a temporary guard and did the proper fix the next sprint. It matters that you can accept the team's decision when your argument does not win, and that you do not make former colleagues look stupid."
+    },
+    "behavioral-05": {
+      "prompt": "Why are you leaving your current job?",
+      "answer": "Talk about moving towards something, not running away: more ownership, product work instead of a ticket conveyor, a different scale, technology you want to go deeper into. Even if the real reason is burnout or bad management, phrase it neutrally — the project moved into maintenance and there are no new problems to solve.\n\nCriticising your current employer is the main mistake, because the interviewer imagines you talking about them next. One or two sentences are enough, then steer back to what you are looking for."
+    },
+    "behavioral-06": {
+      "prompt": "What do you do when the task is vague but the deadline is already set?",
+      "answer": "First I clarify the goal and the definition of done: which user problem we are solving, what counts as success, what is explicitly out of scope — and I put that in writing. Then I break it down and estimate as a range rather than a single number, calling out risks and unknowns separately.\n\nIf the deadline is unrealistic I offer options — cut scope, ship a minimal version, add people, move the date — and show the consequences of each. Then I demo early so any mismatch with expectations shows up on day two rather than at the end. Silently accepting and missing the date is the worst outcome."
+    },
+    "behavioral-07": {
+      "prompt": "How do you keep learning and stay current with Laravel and PHP?",
+      "answer": "Be concrete rather than generic: release notes, the official documentation, a couple of newsletters or podcasts you actually follow, reading framework source, conference talks, other people's pull requests.\n\nStronger still is showing application: I read about lazy collections and rewrote an export that kept running out of memory; when enums landed I replaced string statuses in our project. Side projects, code review and reading other people's code count too. The pattern to demonstrate is learn, apply, get a result."
+    },
+    "behavioral-08": {
+      "prompt": "Tell me about a mistake that was expensive. What did you do?",
+      "answer": "Maturity means naming it without deflecting blame. The shape is what happened, what the impact was, how you found and stopped it, what you fixed, and what changed in the process so it cannot happen again.\n\nFor example: I shipped a migration that locked the orders table for four minutes at peak, we caught it from a response time alert, I rolled the release back, and after that heavy migrations were run separately from releases and rehearsed against a copy of production data. The interviewer is not looking for someone who never breaks anything — they are looking for the conclusions."
+    },
+    "behavioral-09": {
+      "prompt": "Do you have any questions for us?",
+      "answer": "Having none reads as no interest. Prepare four to six and ask two or three that fit: how the team is structured and who makes technical decisions, what the path from ticket to production looks like, how much time goes to support and technical debt, what success in this role looks like after six months, why the position is open.\n\nIt is also your way of evaluating them: an answer like we deploy manually at night without tests is useful information. Questions about time off and overtime are legitimate too, but they land better after you have discussed the work itself."
+    },
+    "behavioral-10": {
+      "prompt": "You do not know the answer to a technical question. What do you do?",
+      "answer": "The worst move is making something up. What works is naming the boundary of your knowledge honestly, reasoning out loud from what you do know, and saying how you would find out.\n\nFor example: I have not run Octane in production, but from how it works I would expect the process to be reused between requests, which makes state in singletons and statics dangerous — I would check the documentation and run a load test. That shows thinking and honesty, and interviewers often turn it into a conversation. Asking clarifying questions is a plus, not a weakness."
+    }
+  }
+}

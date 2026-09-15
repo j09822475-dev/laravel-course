@@ -1,0 +1,443 @@
+{
+  "topic": {
+    "slug": "english-interview",
+    "name": "Английский на собеседовании",
+    "area": "language",
+    "position": 12,
+    "description": "Speaking-практика для скрининга на английском: рассказ о себе, объяснение архитектуры, готовые речевые блоки, шэдоуинг и упражнения с пропусками."
+  },
+  "questions": [
+    {
+      "id": "english-interview-01",
+      "type": "behavioral",
+      "difficulty": "junior",
+      "estimated_seconds": 90,
+      "prompt": "Tell me about yourself.",
+      "answer": "Каркас на 60–90 секунд: настоящее → опыт → достижение с цифрой → почему эта вакансия.\n\nI'm a full stack developer with four years of experience, mostly Laravel on the backend and Vue on the frontend. For the last two years I've been working on a marketplace with around 200 thousand users, where I owned the orders and payments module. The part I'm proudest of is cutting checkout time from three seconds to under one by reworking the queries and moving the heavy work into queues. Right now I'm looking for a product team where I can own a feature end to end — which is exactly how your team works.\n\nОбратите внимание на времена: текущая работа — present perfect continuous (I've been working), законченное достижение — past simple (I cut, I reworked).",
+      "explanation": "Приём: заготовленные речевые блоки (formulaic chunks). На неродном языке мозг тратит ресурс и на содержание, и на грамматику одновременно — отрепетированные блоки снимают половину нагрузки, и вы звучите увереннее. Частая ошибка русскоязычных: «I am working here since 2022» вместо «I've been working here since 2022».",
+      "checklist": [
+        "Уложился в 60–90 секунд",
+        "Есть конкретная цифра или результат",
+        "Present perfect для текущего опыта, past simple для завершённого",
+        "Финал связан с вакансией, а не обрыв на полуслове"
+      ],
+      "red_flags": [
+        "Пересказ всего резюме с первого курса",
+        "Заученный текст без пауз и интонации",
+        "Переход на русский при первой заминке"
+      ],
+      "follow_ups": [
+        "What part of that project was the most challenging?",
+        "Why are you leaving your current company?",
+        "What are you looking for in your next role?"
+      ],
+      "tags": ["speaking", "self-presentation", "chunks"]
+    },
+    {
+      "id": "english-interview-02",
+      "type": "behavioral",
+      "difficulty": "middle",
+      "estimated_seconds": 120,
+      "prompt": "Walk me through the architecture of your last project.",
+      "answer": "Порядок: общая картина → основные части → одно решение с обоснованием → что бы изменили.\n\nIt's a Laravel monolith behind nginx, with PostgreSQL as the main database and Redis for cache, queues and rate limiting. The frontend is Inertia with Vue, so routing and authorisation stay on the server side. Heavy work — imports, PDF generation, webhooks — runs in queued jobs supervised by Horizon.\n\nThe decision I'd highlight is keeping it a modular monolith instead of splitting into services. With one team of five, the cost of distributed transactions and separate deployments would have outweighed the benefits. If traffic on the reporting part keeps growing, that's the first piece I'd extract.\n\nПолезные связки: the main trade-off was…, we deliberately chose X over Y because…, if I were starting again, I'd…",
+      "explanation": "Приём: осознанная практика с обратной связью. Это самый частый технический вопрос на английском скрининге, и именно на нём кандидаты сыплются — не из-за архитектуры, а из-за отсутствия языкового каркаса для рассуждения. Держите наготове три связки: назвать компонент, объяснить выбор, признать ограничение.",
+      "checklist": [
+        "Сначала общая картина, потом детали",
+        "Объясняет выбор через trade-off, а не «так было принято»",
+        "Использует настоящее время для описания системы",
+        "Говорит про ограничения решения"
+      ],
+      "red_flags": [
+        "Перечисление технологий без связей между ними",
+        "Молчание после первого предложения",
+        "Ответ на 5 минут без структуры"
+      ],
+      "follow_ups": [
+        "Why did you choose PostgreSQL over MySQL?",
+        "What would you change if the load grew ten times?",
+        "How do you handle failures in those queued jobs?"
+      ],
+      "tags": ["speaking", "architecture", "trade-offs"]
+    },
+    {
+      "id": "english-interview-03",
+      "type": "behavioral",
+      "difficulty": "middle",
+      "estimated_seconds": 90,
+      "prompt": "Explain the N+1 problem to a product manager who does not write code.",
+      "answer": "Объясняйте через аналогию и последствия для бизнеса, без жаргона.\n\nImagine you ask for a list of fifty orders. Instead of fetching everything in one trip to the database, the application goes back and asks about each customer separately — that's fifty extra trips. Each trip is tiny, but together they make the page slow. The fix is to ask for everything in one go, which usually turns fifty-one queries into two, and the page loads in a fraction of the time.\n\nПолезные связки: think of it as…, in practice this means…, the impact on the user is…",
+      "explanation": "Приём: элаборация — объяснение своими словами и другому человеку закрепляет понимание глубже, чем повторное чтение. Отдельно тренирует навык, который проверяют почти всегда: умение говорить с нетехническими людьми. Держите короткую аналогию на каждую тему, которую точно спросят: кэш, очереди, индексы, N+1.",
+      "checklist": [
+        "Есть аналогия из обычной жизни",
+        "Нет непереведённого жаргона",
+        "Назван эффект для пользователя или бизнеса",
+        "Уложился в 60–90 секунд"
+      ],
+      "red_flags": [
+        "Ответ на уровне eager loading is better than lazy loading",
+        "Переход в код вместо объяснения",
+        "Снисходительный тон"
+      ],
+      "follow_ups": [
+        "How would you explain caching the same way?",
+        "How do you decide what is worth explaining and what is not?",
+        "Can you explain technical debt to a non-technical stakeholder?"
+      ],
+      "tags": ["speaking", "explaining", "stakeholders"]
+    },
+    {
+      "id": "english-interview-04",
+      "type": "behavioral",
+      "difficulty": "middle",
+      "estimated_seconds": 120,
+      "prompt": "Tell me about a time you disagreed with a teammate. How did you handle it?",
+      "answer": "Отвечайте по STAR и держите конфликт о задаче, а не о человеке.\n\nSituation: we had a data loss risk in production and my tech lead wanted to ship a quick hotfix. Task: I was the one who had found the issue, so it was on me to make the risk visible. Action: instead of arguing on the call, I reproduced the failure on staging and showed exactly how records could be lost. Result: we shipped a temporary guard that evening and did the proper fix the following sprint — and we now reproduce this class of bug on staging before deciding.\n\nПолезные связки: we ended up agreeing that…, rather than arguing, I…, in hindsight I would have…",
+      "explanation": "Приём: заготовленная структура (STAR) как каркас памяти. Под стрессом и на неродном языке история рассыпается на середине; четыре опорные точки удерживают её. Запомните маркеры Situation–Task–Action–Result и по одной истории на каждый типовой вопрос: конфликт, ошибка, дедлайн, инициатива.",
+      "checklist": [
+        "Слышны четыре части STAR",
+        "Конфликт о деле, не о личности",
+        "Past simple для истории, present perfect для выводов",
+        "Нет негатива к бывшим коллегам"
+      ],
+      "red_flags": [
+        "История без результата",
+        "Обвинения в адрес команды",
+        "Смена темы вместо ответа"
+      ],
+      "follow_ups": [
+        "What would you do if the decision had gone the other way?",
+        "How do you give critical feedback in code review?",
+        "Tell me about a time you were wrong."
+      ],
+      "tags": ["speaking", "star", "behavioural"]
+    },
+    {
+      "id": "english-interview-05",
+      "type": "behavioral",
+      "difficulty": "middle",
+      "estimated_seconds": 90,
+      "prompt": "What are your salary expectations?",
+      "answer": "Сначала мягко возвращаем вопрос, потом называем диапазон.\n\nBefore I give you a number — could you share the range budgeted for this role? … If you'd like a figure from me: I'm looking at somewhere between X and Y net, and where exactly it lands depends on the scope of ownership and the format of work. I'd also like to understand how the package is put together — base, bonus, equipment, time off.\n\nПолезные связки: could you share the range…, I'm targeting somewhere in the region of…, that works for me if…, I'd need to think it over.",
+      "explanation": "Приём: отработка сценария до автоматизма. Разговор о деньгах на неродном языке — место, где теряют больше всего, потому что от неловкости соглашаются на первую цифру. Отрепетируйте три реплики: возврат вопроса, свой диапазон, просьба о времени на подумать.",
+      "checklist": [
+        "Сначала попытка узнать вилку",
+        "Диапазон, нижняя граница которого устраивает",
+        "Спрашивает про состав компенсации",
+        "Говорит спокойно, без извинений"
+      ],
+      "red_flags": [
+        "Sorry, I don't know, whatever you offer",
+        "Называет текущую зарплату как ориентир",
+        "Соглашается сразу, не дослушав условия"
+      ],
+      "follow_ups": [
+        "Is that number negotiable?",
+        "Do you have other offers at the moment?",
+        "What matters more to you — compensation or the project?"
+      ],
+      "tags": ["speaking", "negotiation"]
+    },
+    {
+      "id": "english-interview-06",
+      "type": "behavioral",
+      "difficulty": "junior",
+      "estimated_seconds": 90,
+      "prompt": "Sorry, I didn't catch that. — Что вы говорите, когда не поняли вопрос интервьюера?",
+      "answer": "Переспрашивать — нормально и даже выигрышно: это показывает, что вы уточняете требования, а не угадываете.\n\nSorry, could you repeat that, please?\nCould you rephrase the question? I want to make sure I understood it correctly.\nJust to check I've got this right — you're asking about X, correct?\nLet me think for a second.\nCan I come back to that in a moment?\n\nПоследние две фразы дают легальную паузу: молчание в 3–4 секунды звучит гораздо лучше, чем «э-э-э».",
+      "explanation": "Приём: снятие когнитивной нагрузки. На неродном языке восприятие на слух проседает первым, особенно при плохой связи и незнакомом акценте. Заготовленные фразы переспроса убирают панику и покупают время на обработку. Не извиняйтесь дважды и не оправдывайтесь за уровень языка — одного sorry достаточно.",
+      "checklist": [
+        "Переспрашивает спокойно и по делу",
+        "Перефразирует вопрос своими словами для проверки",
+        "Использует паузу вместо заполнителей",
+        "Не извиняется за свой английский несколько раз"
+      ],
+      "red_flags": [
+        "Отвечает наугад, не поняв вопроса",
+        "My English is very bad, sorry в начале разговора",
+        "Долгое молчание без объяснения"
+      ],
+      "follow_ups": [
+        "Что скажете, если не расслышали из-за плохой связи?",
+        "Как попросить интервьюера говорить помедленнее?",
+        "Как вернуться к вопросу, который отложили?"
+      ],
+      "tags": ["speaking", "clarifying", "выживание"]
+    },
+    {
+      "id": "english-interview-07",
+      "type": "behavioral",
+      "difficulty": "middle",
+      "estimated_seconds": 90,
+      "prompt": "I've never worked with Kubernetes. — Как признать незнание по-английски, не потеряв лицо?",
+      "answer": "Формула: честная граница → как рассуждали бы → как выяснили бы.\n\nI haven't worked with Kubernetes in production, so I don't want to guess. From what I understand, it schedules containers across nodes and handles restarts and scaling — which would mean the application has to be stateless and ready to be killed at any moment. If it came up in my work, I'd start with the official docs and pair with someone who has run it, rather than learning it on production.\n\nПолезные связки: I haven't worked with X, but I understand that…, I'd approach it like this…, I'd want to check before I commit to an answer.",
+      "explanation": "Приём: метапознание — отслеживание границы собственного знания. Интервьюеры ценят его выше зазубренных фактов: с человеком, который знает, чего не знает, безопасно работать. Не переводите дословно «я не силён в этом» как I am weak in this — звучит как самоуничижение; нейтральное I haven't worked with it much.",
+      "checklist": [
+        "Не блефует",
+        "Рассуждает вслух от первых принципов",
+        "Предлагает способ проверить",
+        "Тон уверенный, без извинений"
+      ],
+      "red_flags": [
+        "Выдуманные подробности",
+        "I am weak in this / My knowledge is very bad",
+        "Ответ «нет» без попытки рассуждения"
+      ],
+      "follow_ups": [
+        "How do you learn something new under a deadline?",
+        "Tell me about a technology you picked up quickly.",
+        "When do you ask for help instead of digging further?"
+      ],
+      "tags": ["speaking", "honesty", "metacognition"]
+    },
+    {
+      "id": "english-interview-08",
+      "type": "behavioral",
+      "difficulty": "junior",
+      "estimated_seconds": 90,
+      "prompt": "Do you have any questions for us?",
+      "answer": "Два-три вопроса по существу: команда, процессы, ожидания от роли.\n\nHow is the team structured, and who makes the technical decisions?\nWhat does the path from a ticket to production look like — review, tests, releases, on-call?\nHow much of the time goes into support and technical debt versus new features?\nWhat would success in this role look like after six months?\nWhy is the position open?\n\nЗакрывающая реплика: That's very helpful, thank you — what are the next steps in the process?",
+      "explanation": "Приём: извлечение из памяти под давлением. Вопросы задаются в конце, когда ресурс уже потрачен на техчасть, поэтому их нужно не придумывать, а вспоминать — запишите шесть и выучите три. Вопрос про next steps в конце звонка воспринимается как признак заинтересованности.",
+      "checklist": [
+        "Есть заготовленные вопросы",
+        "Спрашивает про процессы и ожидания, а не только про деньги",
+        "Слушает ответ и уточняет",
+        "Спрашивает про следующие шаги"
+      ],
+      "red_flags": [
+        "No, I think you covered everything",
+        "Вопросы только про отпуск и переработки",
+        "Вопросы, ответ на которые есть на сайте компании"
+      ],
+      "follow_ups": [
+        "Какой ответ стал бы для вас красным флагом?",
+        "Как спросить про переработки, не звуча настороженно?",
+        "Как уточнить сроки ответа по офферу?"
+      ],
+      "tags": ["speaking", "closing"]
+    },
+    {
+      "id": "english-interview-09",
+      "type": "shadowing",
+      "difficulty": "junior",
+      "estimated_seconds": 120,
+      "prompt": "Шэдоуинг. Прочитайте образец вслух три раза: первый — медленно, второй — в темпе речи, третий — не подглядывая в конец фраз. Следите за паузами на месте запятых.",
+      "answer": "I'm a full stack developer with four years of experience, / mostly Laravel on the backend and Vue on the frontend. / For the last two years I've been working on a marketplace / with around two hundred thousand users, / where I owned the orders and payments module. / I cut checkout time from three seconds to under one / by reworking the queries and moving heavy work into queues. / Right now I'm looking for a product team / where I can own a feature end to end.\n\nОриентир по темпу: около 75 слов, комфортная скорость на собеседовании — 130–150 слов в минуту, то есть этот кусок должен занимать примерно 30–35 секунд. Быстрее — вас перестают понимать, медленнее — звучит неуверенно.",
+      "explanation": "Приём: шэдоуинг — проговаривание вслух за образцом. Он ставит темп, ритм и связки между словами, которые невозможно получить чтением про себя: артикуляционный навык тренируется только артикуляцией. Косые черты — точки для дыхания; именно паузы, а не скорость, делают речь понятной.",
+      "checklist": [
+        "Прочитал вслух, а не про себя",
+        "Держит паузы на разметке",
+        "Уложился примерно в 30–35 секунд",
+        "Третий проход — без подглядывания в конец фраз"
+      ],
+      "tags": ["shadowing", "pace", "fluency"]
+    },
+    {
+      "id": "english-interview-10",
+      "type": "shadowing",
+      "difficulty": "middle",
+      "estimated_seconds": 120,
+      "prompt": "Шэдоуинг. Проговорите вслух блок про компромиссы — это скелет любого технического ответа. Затем повторите его, подставив свой проект.",
+      "answer": "We had two options here. / The first one was simpler to build, / but it wouldn't have scaled past a few thousand requests a minute. / The second one was more work upfront, / and it added a moving part we had to operate. / We went with the second option, / because reads were ten times more frequent than writes, / and that's where the pain was. / The trade-off we accepted / was extra complexity in deployment.\n\nСкелет: two options → плюс и минус каждого → выбор → критерий выбора → принятая цена.",
+      "explanation": "Приём: чанкинг — заучивание не отдельных слов, а готовых блоков. Этот блок переиспользуется почти в любом техническом ответе: достаточно подставить свои варианты и критерий. Именно так носители и звучат бегло — они не собирают фразу из слов, а достают её целиком.",
+      "checklist": [
+        "Проговорил вслух с паузами",
+        "Повторил, подставив собственный проект",
+        "Назвал критерий выбора, а не только сам выбор",
+        "Закончил принятой ценой решения"
+      ],
+      "tags": ["shadowing", "chunks", "trade-offs"]
+    },
+    {
+      "id": "english-interview-11",
+      "type": "shadowing",
+      "difficulty": "middle",
+      "estimated_seconds": 90,
+      "prompt": "Шэдоуинг. Проговорите вслух фразы для живого кодирования — их произносят, пока думают и пишут код.",
+      "answer": "Let me make sure I understand the task correctly. / Can I assume the input is already validated? / I'll start with the straightforward version / and then we can optimise it. / I'm going to name this variable orders / so it's clear what it holds. / This is O(n) in time and O(n) in memory. / One edge case I want to handle / is an empty collection. / If I had more time, / I'd extract this into a separate service.\n\nГоворить во время кодирования обязательно: молчащего кандидата нечем оценивать.",
+      "explanation": "Приём: автоматизация через повторение. На живом кодировании внимание занято задачей, и на подбор английских слов ресурса уже нет — фразы должны выходить автоматически. Проговорите их десять раз, и они перестанут требовать усилий.",
+      "checklist": [
+        "Проговорил вслух все фразы",
+        "Может произнести их, не читая",
+        "Понимает, где какая уместна",
+        "Держит ровный темп"
+      ],
+      "tags": ["shadowing", "live-coding", "chunks"]
+    },
+    {
+      "id": "english-interview-12",
+      "type": "shadowing",
+      "difficulty": "junior",
+      "estimated_seconds": 90,
+      "prompt": "Шэдоуинг. Отработайте первые тридцать секунд звонка — они задают тон всему разговору.",
+      "answer": "Hi, / nice to meet you. / Can you hear me all right? / Thanks for taking the time today. / Yes, / I'm happy to start with a short introduction. / Just so I know — / how long do we have, / and what would you like to cover? / … / Sorry, / you're breaking up a little. / Could you say that again?\n\nПоследние две фразы — про плохую связь, они пригодятся чаще, чем кажется.",
+      "explanation": "Приём: снижение тревожности через предсказуемость. Начало разговора почти всегда одинаковое, и отрепетированные первые реплики сбивают стартовое волнение — дальше речь идёт свободнее. Вопрос про тайминг в начале ещё и помогает распределить ответы.",
+      "checklist": [
+        "Проговорил вслух",
+        "Звучит доброжелательно, а не заученно",
+        "Помнит фразы про плохую связь",
+        "Спрашивает про тайминг звонка"
+      ],
+      "tags": ["shadowing", "small-talk", "начало"]
+    },
+    {
+      "id": "english-interview-13",
+      "type": "cloze",
+      "difficulty": "junior",
+      "estimated_seconds": 30,
+      "prompt": "Заполните пропуск: I was ___ for the payment module and the integration with the bank.",
+      "answer": "responsible",
+      "accepted": ["responsible"],
+      "explanation": "Be responsible for something — базовая связка для описания зоны ответственности. Русское «я отвечал за» нельзя переводить как I answered for. Синонимы: I owned the payment module, I was in charge of payments.",
+      "tags": ["cloze", "collocations", "опыт"]
+    },
+    {
+      "id": "english-interview-14",
+      "type": "cloze",
+      "difficulty": "junior",
+      "estimated_seconds": 30,
+      "prompt": "Заполните пропуск: Let me ___ you through the architecture step by step.",
+      "answer": "walk",
+      "accepted": ["walk", "take"],
+      "explanation": "Walk somebody through something — провести кого-то по теме шаг за шагом; самая частая связка при объяснении системы. Take you through тоже принимается. Не говорите let me explain you — после explain нужен предлог: explain it to you.",
+      "tags": ["cloze", "collocations", "объяснение"]
+    },
+    {
+      "id": "english-interview-15",
+      "type": "cloze",
+      "difficulty": "middle",
+      "estimated_seconds": 30,
+      "prompt": "Заполните пропуск: The main trade-___ was between read speed and consistency.",
+      "answer": "off",
+      "accepted": ["off"],
+      "explanation": "Trade-off — компромисс между двумя желаемыми свойствами. Ключевое слово всей технической части: интервьюер слышит в нём инженерное мышление. Связки: the trade-off was…, we traded X for Y, at the cost of…",
+      "tags": ["cloze", "trade-offs"]
+    },
+    {
+      "id": "english-interview-16",
+      "type": "cloze",
+      "difficulty": "middle",
+      "estimated_seconds": 30,
+      "prompt": "Заполните пропуск: We ___ into a race condition when two workers processed the same order.",
+      "answer": "ran",
+      "accepted": ["ran"],
+      "explanation": "Run into a problem — столкнуться с проблемой (past simple: ran into). Соседние связки: we came across…, we hit an issue with…, it turned out that… Русское «встретились с проблемой» как we met a problem не используется.",
+      "tags": ["cloze", "проблемы", "past simple"]
+    },
+    {
+      "id": "english-interview-17",
+      "type": "cloze",
+      "difficulty": "middle",
+      "estimated_seconds": 30,
+      "prompt": "Заполните пропуск: We ___ the response time by forty percent after reworking the queries.",
+      "answer": "reduced",
+      "accepted": ["reduced", "cut", "decreased", "brought down"],
+      "explanation": "Reduce / cut something by N percent — формула достижения с цифрой. Именно такие фразы запоминаются интервьюером. Осторожно с improve: improved the response time by 40% звучит двусмысленно — лучше reduced или cut.",
+      "tags": ["cloze", "достижения", "цифры"]
+    },
+    {
+      "id": "english-interview-18",
+      "type": "cloze",
+      "difficulty": "middle",
+      "estimated_seconds": 30,
+      "prompt": "Заполните пропуск: I've ___ working with Laravel since 2021 — этим временем описывают опыт, который продолжается сейчас.",
+      "answer": "been",
+      "accepted": ["been"],
+      "explanation": "Present perfect continuous: I've been working here since 2021 / for three years. Самая частая ошибка русскоязычных — I am working here since 2021 (калька с настоящего времени). Since — момент начала, for — длительность.",
+      "tags": ["cloze", "времена", "типичная ошибка"]
+    },
+    {
+      "id": "english-interview-19",
+      "type": "cloze",
+      "difficulty": "junior",
+      "estimated_seconds": 30,
+      "prompt": "Заполните пропуск: Could you ___ the question, please? I want to make sure I understood it correctly.",
+      "answer": "rephrase",
+      "accepted": ["rephrase", "repeat"],
+      "explanation": "Rephrase — переформулировать, repeat — повторить. Rephrase полезнее: если вы не поняли формулировку, дословный повтор не поможет. Заготовьте обе — на плохой связи и на незнакомом акценте они выручают.",
+      "tags": ["cloze", "clarifying"]
+    },
+    {
+      "id": "english-interview-20",
+      "type": "cloze",
+      "difficulty": "middle",
+      "estimated_seconds": 30,
+      "prompt": "Заполните пропуск: I'd like to ___ up on what you said about the release process.",
+      "answer": "follow",
+      "accepted": ["follow"],
+      "explanation": "Follow up on something — вернуться к теме, уточнить. Показывает, что вы слушали собеседника, а не ждали своей очереди говорить. Родственное: to circle back to your earlier point…",
+      "tags": ["cloze", "диалог"]
+    },
+    {
+      "id": "english-interview-21",
+      "type": "quiz",
+      "difficulty": "junior",
+      "estimated_seconds": 45,
+      "prompt": "Вы сейчас работаете в компании с 2022 года. Какой вариант верный?",
+      "options": [
+        "I work here since 2022",
+        "I am working here since 2022",
+        "I have been working here since 2022",
+        "I worked here since 2022"
+      ],
+      "correct_option": 2,
+      "answer": "I have been working here since 2022",
+      "explanation": "Действие началось в прошлом и продолжается сейчас — present perfect continuous. Present simple и present continuous с since не сочетаются, past simple означал бы, что вы там больше не работаете. Это ошибка номер один у русскоязычных кандидатов, и её замечают в первые тридцать секунд разговора.",
+      "tags": ["грамматика", "времена"]
+    },
+    {
+      "id": "english-interview-22",
+      "type": "quiz",
+      "difficulty": "middle",
+      "estimated_seconds": 45,
+      "prompt": "Интервьюер спрашивает про опыт, которого у вас нет. Какой ответ сильнее?",
+      "options": [
+        "Sorry, my knowledge of this is very bad",
+        "Yes, I know it well (и дальше общие слова)",
+        "I haven't worked with it in production, but here's how I'd approach it",
+        "I don't know"
+      ],
+      "correct_option": 2,
+      "answer": "I haven't worked with it in production, but here's how I'd approach it",
+      "explanation": "Честная граница плюс рассуждение — то, что интервьюер и хочет услышать: он проверяет мышление, а не список технологий. Самоуничижение (my knowledge is very bad) снижает оценку сильнее, чем само незнание, а блеф вскрывается первым уточняющим вопросом.",
+      "tags": ["стратегия", "speaking"]
+    },
+    {
+      "id": "english-interview-23",
+      "type": "quiz",
+      "difficulty": "junior",
+      "estimated_seconds": 45,
+      "prompt": "Какая фраза уместна, когда вам нужно несколько секунд на обдумывание?",
+      "options": [
+        "Wait, wait, I think",
+        "That's a good question — let me think for a second",
+        "Emmm… how to say…",
+        "One minute please, I need translate"
+      ],
+      "correct_option": 1,
+      "answer": "That's a good question — let me think for a second",
+      "explanation": "Это стандартный приём носителей: фраза-заполнитель даёт легальную паузу и звучит собранно. Заполнители вроде emmm и how to say сигналят о потере контроля, а wait звучит как команда. Пауза в 3–4 секунды воспринимается нормально — молчание пугает только вас.",
+      "tags": ["speaking", "паузы"]
+    },
+    {
+      "id": "english-interview-24",
+      "type": "theory",
+      "difficulty": "middle",
+      "estimated_seconds": 120,
+      "prompt": "Как готовиться к собеседованию на английском за две недели, если язык давно не использовался?",
+      "answer": "План по убыванию отдачи:\n\n1) Речь, а не чтение. Отвечайте вслух с таймером — навык говорения тренируется только говорением. Записывайте себя на диктофон: расхождение между «я говорил нормально» и записью — главный источник прогресса.\n2) Десять историй. Рассказ о себе, три проекта, конфликт, ошибка, дедлайн, достижение, почему уходите, вопросы к компании. Это покрывает 80% скрининга.\n3) Речевые блоки вместо слов. Учите фразы целиком (I was responsible for…, the trade-off was…, let me walk you through…): готовый блок достаётся из памяти за один шаг.\n4) Шэдоуинг по 10 минут в день. Повторяйте вслух за носителем (подкасты про разработку) — ставит темп и ритм.\n5) Распределённые повторения. Три подхода по 20 минут в разные дни дают больше, чем три часа накануне: память закрепляется в промежутках, особенно во сне.\n6) Аудирование на акцентах. Индийский, немецкий, испанский английский на собеседованиях встречается чаще британского.\n\nЧего не делать: учить списки слов без контекста, писать ответы и читать их с листа на звонке (слышно сразу), извиняться за свой уровень.",
+      "explanation": "Приём: распределённая практика и извлечение из памяти. Оба эффекта — самые надёжно подтверждённые в исследованиях обучения: тестирование себя работает лучше перечитывания, а разнесённые во времени подходы лучше одного длинного. Тренажёр устроен именно так: сначала ваш ответ, потом эталон, и возврат вопроса через интервал.",
+      "checklist": [
+        "Практика вслух, а не про себя",
+        "Заготовлены ключевые истории",
+        "Учит фразы, а не отдельные слова",
+        "Распределяет занятия по дням"
+      ],
+      "follow_ups": [
+        "Как тренировать аудирование без собеседника?",
+        "Что делать, если на звонке случился ступор?",
+        "Как понять, что ваш уровень достаточен для вакансии?"
+      ],
+      "tags": ["подготовка", "методика"]
+    }
+  ]
+}

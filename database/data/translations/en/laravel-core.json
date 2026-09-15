@@ -1,0 +1,88 @@
+{
+  "locale": "en",
+  "questions": {
+    "laravel-core-01": {
+      "prompt": "Walk me through the Laravel request lifecycle, from public/index.php to the response.",
+      "answer": "public/index.php loads the autoloader and creates the application from bootstrap/app.php. The application is the service container: providers are registered, then booted. The request becomes an Illuminate Request, goes through the global middleware, and the router matches a route and runs its group and route middleware.\n\nThe container then resolves the controller, injecting dependencies and route-bound models, the action runs, and the result is converted into a response. The response travels back out through the middleware — terminable middleware runs after it has been sent. In Laravel 11 and later there is no Http Kernel: middleware, exceptions and routing are configured in bootstrap/app.php."
+    },
+    "laravel-core-02": {
+      "prompt": "What is the service container and how does automatic dependency injection work?",
+      "answer": "The container is Laravel's IoC implementation: it builds objects and resolves their dependencies. When it resolves a class it reflects on the constructor types and builds them recursively. Interfaces need an explicit binding in a provider — bind for a fresh instance each time, singleton for one per request, scoped, or instance for a ready-made object.\n\nThat is what makes implementations swappable in tests: a controller depends on a PaymentGateway, and the binding decides whether that is Stripe or a fake. Contextual binding lets different consumers get different implementations."
+    },
+    "laravel-core-03": {
+      "prompt": "What is middleware? Give examples and explain the order of execution.",
+      "answer": "Middleware wraps request handling: it can inspect, modify or reject a request before the controller and touch the response afterwards. Typical ones are auth, throttle and verified, plus custom ones like subscription checks, locale or logging.\n\nThe order comes from registration — global, then group, then route middleware — and the response passes back through them in reverse, like an onion. In Laravel 11 and later groups and priority are configured in bootstrap/app.php."
+    },
+    "laravel-core-04": {
+      "prompt": "How do queues work in Laravel? What do you need for production?",
+      "answer": "A job is a class with a handle method that gets serialised into a driver — database, redis or sqs. Dispatching puts it on the queue and a worker process picks it up. You get delays, priorities, batches, chains and unique jobs.\n\nIn production you need a supervisor to keep workers alive, sensible tries, backoff and timeout, monitoring of failed_jobs, and queue:restart on every deploy because the worker holds the old code in memory. With Redis I usually run Horizon for metrics and balancing. One important detail: models are serialised by id, so the job reloads them — you cannot rely on unsaved changes."
+    },
+    "laravel-core-05": {
+      "prompt": "Events and listeners: what are they for, and when do they hurt?",
+      "answer": "Events give you loose coupling: the code publishes a fact such as OrderPaid and listeners react — send an email, award points, call a webhook. Listeners can be queued, and in tests you fake them.\n\nThe pain starts when business logic is scattered across a dozen listeners: it becomes hard to tell what actually happens after an action. My rule is that an event announces a fact, it is not the way to perform a required step — critical steps stay in an explicit service inside a transaction. Another trap is model events: they only fire through Eloquent and stay silent on mass updates through the query builder."
+    },
+    "laravel-core-06": {
+      "prompt": "How does caching work in Laravel and how do you invalidate it properly?",
+      "answer": "Cache is one facade over several drivers — redis, memcached, database, file, array. The main methods are get and put, remember, increment, tags where the driver supports them, and lock for distributed locking.\n\nInvalidation is the hard part: versioned keys, keys tied to updated_at, tags for groups, or clearing specific keys from a model event. Against stampedes I use a lock and spread the TTLs. And config:cache and route:cache are a different thing entirely — they must be rebuilt on deploy, and env() outside config files returns null once the config is cached."
+    },
+    "laravel-core-07": {
+      "prompt": "How is a Form Request different from validating inside the controller? What does authorize() give you?",
+      "answer": "A Form Request is a separate class with rules and an authorize method. It validates before the controller action runs, returns 422 with the error bag for JSON and a redirect with errors for web requests, and hands the controller clean data through validated().\n\nauthorize answers whether this user may perform the action at all and returns 403 when it fails, which pairs naturally with policies. The benefits are reusable rules, a thin controller and easy testing."
+    },
+    "laravel-core-08": {
+      "prompt": "What are service providers and what do you usually register in them?",
+      "answer": "A provider is the extension point of the application. In register you only bind interfaces to implementations — you cannot touch services that are not registered yet. Everything else goes into boot: macros, policies, model observers, Blade directives, custom validation rules, publishing config, and preventing lazy loading in development.\n\nFor packages the provider also declares migrations, views, translations and config. In Laravel 11 and later application providers are listed in bootstrap/providers.php, and deferred providers keep boot time down."
+    },
+    "laravel-core-09": {
+      "prompt": "How would you handle a heavy operation in Laravel — importing 500 thousand rows from a CSV?",
+      "answer": "Accept the upload quickly and return a job id. Parse the file as a stream, split it into chunks of five hundred to a thousand rows and dispatch them as a batch; each job writes with upsert inside a transaction and records progress.\n\nFor control I use a job batch with callbacks, progress in the database or Redis, a separate table for rejected rows, and idempotency on some external key so a retry does not duplicate data. Add timeout, tries and backoff, disable unnecessary model events for the bulk insert, and show the user progress through polling or broadcasting."
+    },
+    "laravel-core-10": {
+      "prompt": "How does the task scheduler work and why is it better than plain cron?",
+      "answer": "The schedule lives in code and cron only runs schedule:run every minute. That means the schedule is in version control and under review, and you get useful constraints: withoutOverlapping, onOneServer, background execution, environment conditions.\n\nIn production I watch that it actually runs — success and failure hooks, logging, an external heartbeat check. On a cluster onOneServer with a shared cache is mandatory, otherwise every node runs the same task."
+    },
+    "laravel-core-11": {
+      "prompt": "Which container method creates a single instance for the whole request?",
+      "options": ["bind()", "singleton()", "make()", "resolve()"],
+      "answer": "singleton()"
+    },
+    "laravel-core-12": {
+      "prompt": "A queued job throws an exception. With tries set to 3 and a failed_jobs table, what happens by default?",
+      "options": [
+        "The job goes straight to failed_jobs",
+        "The job is retried up to 3 times and then goes to failed_jobs",
+        "The worker stops",
+        "The job is retried forever"
+      ],
+      "answer": "The job is retried up to 3 times and then goes to failed_jobs"
+    },
+    "laravel-core-13": {
+      "prompt": "After running php artisan config:cache, what does env('SOME_KEY') return inside a service class?",
+      "options": [
+        "The value from .env",
+        "null",
+        "The value from config/app.php",
+        "An exception"
+      ],
+      "answer": "null"
+    },
+    "laravel-core-14": {
+      "prompt": "You dispatch an event with a queued listener inside a database transaction that is later rolled back. What happens?",
+      "options": [
+        "The listener never runs — Laravel always waits for the commit",
+        "The listener may run and find no data unless after_commit is configured",
+        "The transaction cannot be rolled back",
+        "The event is cancelled automatically"
+      ],
+      "answer": "The listener may run and find no data unless after_commit is configured"
+    },
+    "laravel-core-15": {
+      "prompt": "How are facades different from dependency injection? How do you test them?",
+      "answer": "A facade is a static proxy to something in the container: Cache::get resolves the service and calls the method. It is sugar rather than real static state, which is why facades can be faked in tests — shouldReceive, Queue::fake, Mail::fake.\n\nThe downside is that dependencies no longer show up in the signature, and static analysis has less to work with. In controllers and small places facades are fine; in domain services I prefer constructor injection because the dependencies are explicit and the class is easier to test."
+    },
+    "laravel-core-16": {
+      "prompt": "What is route model binding, and how is implicit binding different from explicit binding?",
+      "answer": "Route model binding turns a route parameter into a model. Implicit binding works from the type hint — Laravel looks the record up by primary key and returns 404 when it is missing. You can bind by another column with a route key or by overriding getRouteKeyName.\n\nExplicit binding is defined with Route::bind and your own logic, for example only published records. Binding also respects scoped nested resources and runs before policies, so the model is already loaded when authorisation happens."
+    }
+  }
+}

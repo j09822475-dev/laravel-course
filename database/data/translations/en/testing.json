@@ -1,0 +1,50 @@
+{
+  "locale": "en",
+  "questions": {
+    "testing-01": {
+      "prompt": "How is a feature test different from a unit test in Laravel? Which do you write more of?",
+      "answer": "A unit test checks one class in isolation, without the database or the framework, so it is fast and precise. A feature test boots the application and exercises a whole scenario: the HTTP request, routing, middleware, validation, the database write and the response.\n\nIn Laravel most of the value comes from feature tests, because they catch real regressions with little code. Unit tests are for pure logic — calculations, rules, value objects. The pyramid in a web application often looks more like a trapezoid, and that is fine."
+    },
+    "testing-02": {
+      "prompt": "Which Laravel testing tools do you use — fakes, factories, helpers?",
+      "answer": "Factories for data, with states, sequences and relations. Fakes for external effects — mail, queues, events, notifications, storage, the HTTP client — so I can assert that something was dispatched without actually sending it.\n\nFor requests I use acting as a user, the JSON helpers, assertions on status and JSON paths, validation error assertions, and database assertions. Time can be frozen or travelled. The principle is to assert observable behaviour — the response, the database row, the sent email — not internal calls."
+    },
+    "testing-03": {
+      "prompt": "What are mocks, stubs and spies? When does mocking start to hurt?",
+      "answer": "A stub returns canned data, a mock also asserts the expected calls, and a spy records calls so you can check them afterwards.\n\nIt hurts when the test describes the implementation: any refactor breaks it even though behaviour has not changed. A good signal of trouble is a test with more setup than meaning. I mock the boundaries — HTTP, payments, mail, time — and use the real classes inside. Wanting to mock half the system usually means the design is too coupled."
+    },
+    "testing-04": {
+      "prompt": "What does your CI pipeline for a Laravel project look like?",
+      "answer": "On every push and pull request: install PHP and dependencies with a cache, prepare the environment, run migrations against a test database, run the test suite, static analysis, a code style check, a dependency vulnerability audit and the frontend build.\n\nThen deployment on a tag or on the main branch: build the artifact, run migrations, rebuild the config, route and view caches, restart the PHP processes and the queue workers, warm the cache and roll back if the health check fails. Red CI blocks merging, and flaky tests get fixed rather than disabled."
+    },
+    "testing-05": {
+      "prompt": "What does the RefreshDatabase trait do in tests?",
+      "options": [
+        "It drops the database after every test",
+        "It keeps the database clean: migrations once, and each test inside a transaction that is rolled back",
+        "It creates factories for every model",
+        "It switches the application to the array driver"
+      ],
+      "answer": "It keeps the database clean: migrations once, and each test inside a transaction that is rolled back"
+    },
+    "testing-06": {
+      "prompt": "A test calls Queue::fake() and then the code dispatches a job. What happens?",
+      "options": [
+        "The job runs synchronously",
+        "The job does not run, but you can assert that it was pushed",
+        "The test fails with an exception",
+        "The job goes to the real queue"
+      ],
+      "answer": "The job does not run, but you can assert that it was pushed"
+    },
+    "testing-07": {
+      "prompt": "Which tool finds type errors and unreachable code without running the application?",
+      "options": ["Pint", "PHPStan with Larastan", "Pest", "Telescope"],
+      "answer": "PHPStan with Larastan"
+    },
+    "testing-08": {
+      "prompt": "You inherit a project with no tests and regular regressions. Where do you start?",
+      "answer": "Not by trying to cover everything. First I pin down the boundaries with feature tests on the critical money and user paths — checkout, payment, registration — because that is the most protection for the least effort. Every bug I fix gets a failing test first.\n\nIn parallel I add the safety net: CI running tests and static analysis, a formatter for consistent style, and error monitoring so I hear about regressions before users do. Then characterisation tests around the code I am about to refactor, and gradually pulling logic out of controllers into testable services. The metric I care about is the number of regressions and the time to detect them, not the coverage percentage."
+    }
+  }
+}

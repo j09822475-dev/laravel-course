@@ -3,6 +3,7 @@
 @section('title', 'Отчёт по сессии')
 
 @php
+    $language = $session->language();
     $items = $session->items;
     $byPhase = $items->groupBy('phase');
     $scoreColor = $session->score >= 70 ? 'emerald' : ($session->score >= 40 ? 'amber' : 'rose');
@@ -22,6 +23,9 @@
                 </div>
                 <div class="text-right">
                     <div class="text-4xl font-semibold">{{ $session->score }}%</div>
+                    @if ($language->isEnglish())
+                        <x-badge color="emerald" class="mr-1">EN</x-badge>
+                    @endif
                     <x-badge :color="$scoreColor">
                         @if ($session->score >= 70) Готовы к собеседованию
                         @elseif ($session->score >= 40) Нужна доработка
@@ -47,7 +51,10 @@
             <x-card :title="$phaseItems->first()->phaseLabel()">
                 <ul class="space-y-4">
                     @foreach ($phaseItems as $item)
-                        @php $rating = $item->rating(); @endphp
+                        @php
+                            $rating = $item->rating();
+                            $text = $item->question->in($language);
+                        @endphp
                         <li class="rounded-xl border border-slate-200 p-4 dark:border-slate-800">
                             <div class="flex flex-wrap items-center gap-2">
                                 <x-badge color="indigo">{{ $item->question->topic->name }}</x-badge>
@@ -64,7 +71,7 @@
                                 </span>
                             </div>
 
-                            <p class="answer-body mt-3 text-sm font-medium">{{ $item->question->prompt }}</p>
+                            <p class="answer-body mt-3 text-sm font-medium">{{ $text->prompt }}</p>
 
                             @if ($item->answer_text)
                                 <div class="mt-3 rounded-lg bg-slate-50 p-3 text-sm dark:bg-slate-950">
@@ -77,9 +84,9 @@
                                 <summary class="cursor-pointer text-sm font-medium text-indigo-700 dark:text-indigo-300">
                                     Эталонный ответ
                                 </summary>
-                                <div class="answer-body mt-2 text-sm leading-relaxed text-slate-700 dark:text-slate-300">{{ $item->question->answer }}</div>
-                                @if ($item->question->explanation)
-                                    <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">{{ $item->question->explanation }}</p>
+                                <div class="answer-body mt-2 text-sm leading-relaxed text-slate-700 dark:text-slate-300">{{ $text->answer }}</div>
+                                @if ($text->explanation)
+                                    <p class="answer-body mt-2 text-xs text-slate-500 dark:text-slate-400">{{ $text->explanation }}</p>
                                 @endif
                             </details>
                         </li>

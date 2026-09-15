@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\Difficulty;
+use App\Enums\Language;
 use App\Enums\QuestionType;
 use App\Enums\SessionMode;
 use App\Enums\SessionStatus;
@@ -47,6 +48,15 @@ class InterviewBuilder
             SessionMode::Quiz => [
                 'tech' => ['types' => [QuestionType::Quiz], 'count' => 10],
             ],
+            // Английский скрининг: разогрев речи, самопрезентация, техническое
+            // объяснение на английском и отработка речевых блоков в конце.
+            SessionMode::EnglishInterview => [
+                'warm_up' => ['types' => [QuestionType::Shadowing], 'count' => 1, 'areas' => ['language']],
+                'intro' => ['types' => [QuestionType::Behavioral], 'count' => 2, 'areas' => ['language']],
+                'tech' => ['types' => [QuestionType::Theory], 'count' => 3, 'except_areas' => ['language', 'soft']],
+                'drill' => ['types' => [QuestionType::Cloze], 'count' => 3, 'areas' => ['language']],
+                'wrap_up' => ['types' => [QuestionType::Behavioral, QuestionType::Quiz], 'count' => 1, 'areas' => ['language']],
+            ],
             SessionMode::Drill => [
                 'tech' => ['types' => [QuestionType::Theory, QuestionType::Coding], 'count' => 10],
             ],
@@ -70,14 +80,17 @@ class InterviewBuilder
             throw new \RuntimeException('Не удалось подобрать вопросы под выбранные фильтры.');
         }
 
-        return DB::transaction(function () use ($trainee, $mode, $options, $level, $questions) {
+        $language = $this->language($mode, $options);
+
+        return DB::transaction(function () use ($trainee, $mode, $options, $level, $language, $questions) {
             $session = $trainee->sessions()->create([
                 'mode' => $mode,
-                'title' => $this->title($mode, $level),
+                'title' => $this->title($mode, $level, $language),
                 'status' => SessionStatus::InProgress,
                 'config' => [
                     'level' => $level->value,
                     'topics' => $options['topics'] ?? [],
+                    'language' => $language->value,
                 ],
                 'started_at' => now(),
             ]);
@@ -106,21 +119,27 @@ class InterviewBuilder
         $used = [];
         $result = collect();
 
+        $language = $this->language($mode, $options);
+
         foreach ($this->blueprint($mode) as $phase => $spec) {
-            $picked = $this->bank->pick($spec['count'], [
+            $filters = [
                 'types' => $spec['types'],
                 'difficulties' => $level->scope(),
-                'topics' => $options['topics'] ?? null,
+                'areas' => $spec['areas'] ?? null,
+                // Языковую тему не подмешиваем в технические фазы и наоборот.
+                'except_areas' => $spec['except_areas'] ?? (isset($spec['areas']) ? null : ['language']),
                 'exclude' => $used,
-            ]);
+            ];
 
-            // Поведенческие вопросы не зависят от выбранных технических тем.
+            if ($language->isEnglish()) {
+                $filters['language'] = $language;
+            }
+
+            $picked = $this->bank->pick($spec['count'], $filters + ['topics' => $options['topics'] ?? null]);
+
+            // Поведенческие и языковые вопросы не зависят от выбранных технических тем.
             if ($picked->isEmpty() && ! empty($options['topics'])) {
-                $picked = $this->bank->pick($spec['count'], [
-                    'types' => $spec['types'],
-                    'difficulties' => $level->scope(),
-                    'exclude' => $used,
-                ]);
+                $picked = $this->bank->pick($spec['count'], $filters);
             }
 
             foreach ($picked as $question) {
@@ -148,20 +167,46 @@ class InterviewBuilder
             ->when($topics, fn (Collection $questions) => $questions->whereIn('topic_id', $topics))
             ->values();
 
+        $language = $this->language(SessionMode::Drill, $options);
+
         $fresh = $this->bank->pickWeakest($trainee, max($size - $due->count(), 0), [
             'types' => [QuestionType::Theory, QuestionType::Coding, QuestionType::SystemDesign],
             'difficulties' => $level->scope(),
             'topics' => $topics,
+            'except_areas' => $topics ? null : ['language'],
+            'language' => $language->isEnglish() ? $language : null,
             'exclude' => $due->pluck('id')->all(),
         ]);
 
-        return $due->concat($fresh)
-            ->take($size)
+        $questions = $due->concat($fresh)->take($size);
+
+        return $this->bank
+            ->interleave($questions)
             ->map(fn (Question $question) => ['question' => $question, 'phase' => 'tech']);
     }
 
-    protected function title(SessionMode $mode, Difficulty $level): string
+    /**
+     * Язык сессии: режим английского интервью всегда на английском,
+     * остальные режимы можно переключить вручную.
+     */
+    public function language(SessionMode $mode, array $options = []): Language
     {
-        return sprintf('%s · %s', $mode->label(), $level->label());
+        if ($mode === SessionMode::EnglishInterview) {
+            return Language::En;
+        }
+
+        return isset($options['language'])
+            ? Language::from($options['language'])
+            : Language::Ru;
+    }
+
+    protected function title(SessionMode $mode, Difficulty $level, Language $language): string
+    {
+        return sprintf(
+            '%s · %s%s',
+            $mode->label(),
+            $level->label(),
+            $language->isEnglish() && $mode !== SessionMode::EnglishInterview ? ' · EN' : '',
+        );
     }
 }

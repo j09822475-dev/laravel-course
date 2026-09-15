@@ -52,7 +52,16 @@
                         @endforeach
                     </div>
 
-                    <div class="grid gap-4 sm:grid-cols-2">
+                    <div class="grid gap-4 sm:grid-cols-3">
+                        <div>
+                            <label class="mb-1 block text-xs font-medium text-slate-500 dark:text-slate-400">Язык сессии</label>
+                            <select name="language" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900">
+                                @foreach (\App\Enums\Language::cases() as $option)
+                                    <option value="{{ $option->value }}">{{ $option->label() }}</option>
+                                @endforeach
+                            </select>
+                            <p class="mt-1 text-xs text-slate-400">Режим «Интервью на английском» всегда на английском.</p>
+                        </div>
                         <div>
                             <label class="mb-1 block text-xs font-medium text-slate-500 dark:text-slate-400">Уровень вопросов</label>
                             <select name="level" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900">

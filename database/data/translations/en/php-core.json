@@ -1,0 +1,84 @@
+{
+  "locale": "en",
+  "questions": {
+    "php-core-01": {
+      "prompt": "What is the difference between an abstract class, an interface and a trait? When do you use each?",
+      "answer": "An interface is a contract with no implementation, and a class can implement as many as it needs. An abstract class is a partial implementation plus shared state, and you only get one parent. A trait is horizontal code reuse — the methods are copied into the class at compile time, and it plays no part in type checks.\n\nSo: an interface when I need polymorphism and swappable implementations, an abstract class when children share a template and state, a trait when unrelated classes need the same piece of code. Traits are easy to overuse — they hide dependencies, and two traits with the same method name clash unless you resolve it with insteadof."
+    },
+    "php-core-02": {
+      "prompt": "What is the difference between == and === in PHP? What changed in PHP 8 when comparing a string to a number?",
+      "answer": "=== compares type and value, == applies juggling rules. In PHP 8, comparing a number with a non-numeric string is done as a string comparison, so 0 == 'foo' is now false — in PHP 7 it was true. Numeric strings are still compared as numbers, so '1e3' == '1000' is true.\n\nIn practice I default to === and do explicit casting and validation at the edges of the application."
+    },
+    "php-core-03": {
+      "prompt": "Are variables in PHP passed by value or by reference? What about objects and arrays?",
+      "answer": "Variables are passed by value, but arrays and objects use copy-on-write, so the data is only duplicated when you write to it. An object variable holds an instance identifier, so a copy points at the same object — changing a property is visible everywhere, even though the variable itself was passed by value. To get an independent object you need clone, and for nested objects a __clone with deep copying.\n\nArrays really are copied by value: changing the copy does not affect the original unless you pass it with an ampersand."
+    },
+    "php-core-04": {
+      "prompt": "What are generators (yield) and when do you actually need them?",
+      "answer": "A generator is a function with yield that returns a Generator and produces values lazily, without holding the whole collection in memory. You need it when the data set is large or unknown: reading a file line by line, iterating a database result, infinite sequences.\n\nIn Laravel that's cursor() and lazy() on Eloquent, LazyCollection and chunked processing — instead of half a million models in memory you hold one at a time. The downside is you cannot iterate a generator twice and there is no count()."
+    },
+    "php-core-05": {
+      "prompt": "Which features of PHP 8.0 to 8.4 do you actually use in your work?",
+      "answer": "From 8.0 — constructor property promotion, named arguments, union types, match, the nullsafe operator and attributes. From 8.1 — enums, readonly properties, fibers and first-class callables. From 8.2 — readonly classes and no more dynamic properties. From 8.3 — typed class constants and json_validate. From 8.4 — property hooks and asymmetric visibility.\n\nDay to day it comes down to three things: enums instead of magic strings, promoted properties in DTOs, and readonly for value objects."
+    },
+    "php-core-06": {
+      "prompt": "How does error handling work in PHP 7 and above? What is the difference between Error and Exception?",
+      "answer": "Both implement Throwable. Exceptions are application-level, while Error covers engine failures — TypeError, ValueError, DivisionByZeroError — which used to be fatal. I catch Error only where it makes sense rather than wrapping everything in catch Throwable.\n\nIn Laravel exceptions are handled in bootstrap/app.php: report for logging, render for the response. For APIs I return JSON with a code and a safe message, and I define domain exceptions like OrderAlreadyPaidException because they make the code read like the business rules."
+    },
+    "php-core-07": {
+      "prompt": "What happens to a PHP process from request to response with nginx and PHP-FPM? Where does opcache fit in?",
+      "answer": "nginx takes the request, serves static files itself and passes PHP requests over FastCGI to an FPM pool. A free worker picks it up, runs public/index.php, returns the response and — shared-nothing — throws the memory away.\n\nOPcache keeps the compiled bytecode in shared memory so files are not parsed on every request; in production you add preloading and turn off timestamp validation, restarting FPM on deploy. The consequence is that no state survives between requests — singletons and statics live inside one request only, unless you run Octane, where the process is reused and that assumption breaks."
+    },
+    "php-core-08": {
+      "prompt": "What is PSR-4 autoloading and how does Composer provide it?",
+      "answer": "PSR-4 maps a namespace prefix to a directory — App to app — and from there the path mirrors the namespace and the file name matches the class name. Composer generates vendor/autoload.php and registers an autoloader that includes the file the first time a class is used.\n\nIn production I run composer install with --no-dev and --optimize-autoloader so a prebuilt class map is used instead of hitting the filesystem."
+    },
+    "php-core-09": {
+      "prompt": "What is the difference between composer.json and composer.lock? What do you commit, and what do you run in production?",
+      "answer": "composer.json declares the version ranges you accept, composer.lock pins the exact versions that are installed. Both go into the repository — the lock file is what guarantees the same dependencies for the whole team and on the server.\n\nOn the server you run composer install, which installs strictly from the lock file. composer update is a deliberate action on a developer machine, and the resulting lock file is committed."
+    },
+    "php-core-10": {
+      "prompt": "The application is using a lot of memory and hits the memory limit while exporting a report. What do you do?",
+      "answer": "Measure first: peak memory usage, a profiler, the logs. The usual causes are loading a whole result set into models, building a huge string in memory, or accumulating data in static properties.\n\nThe fix is streaming — cursor or chunkById, writing the file row by row with fputcsv or a streamed response, selecting only the columns I need instead of full models, and moving the export into a queued job. Raising the memory limit treats the symptom, not the cause."
+    },
+    "php-core-11": {
+      "prompt": "What does this output: var_dump('10' == '1e1');",
+      "options": ["bool(true)", "bool(false)", "TypeError", "It depends on strict_types"],
+      "answer": "bool(true)"
+    },
+    "php-core-12": {
+      "prompt": "Which statement about enums in PHP 8.1 is correct?",
+      "options": [
+        "An enum can hold mutable state in properties",
+        "A backed enum must be typed int or string and provides from() and tryFrom()",
+        "Enums cannot be used in match",
+        "Enums cannot implement interfaces"
+      ],
+      "answer": "A backed enum must be typed int or string and provides from() and tryFrom()"
+    },
+    "php-core-13": {
+      "prompt": "What does the nullsafe operator ?-> do?",
+      "options": [
+        "Suppresses any error in the call chain",
+        "Returns null if the object on the left is null, without calling the method",
+        "Works the same way as ?? for array keys",
+        "Throws an exception when the value is null"
+      ],
+      "answer": "Returns null if the object on the left is null, without calling the method"
+    },
+    "php-core-14": {
+      "prompt": "What happens when you write to a readonly property a second time?",
+      "options": [
+        "The value silently stays the same",
+        "An Error is thrown",
+        "An E_NOTICE is raised and the write succeeds",
+        "The property becomes null"
+      ],
+      "answer": "An Error is thrown"
+    },
+    "php-core-15": {
+      "prompt": "What are the magic methods __get, __call and __invoke? What are their downsides?",
+      "answer": "__get and __set intercept access to inaccessible properties, __call and __callStatic intercept calls to methods that do not exist, and __invoke makes an object callable like a function. Laravel leans on all of them — model attributes, facades, the query builder, single-action controllers.\n\nThe cost is tooling and clarity: autocompletion and static analysis get weaker, mistakes surface at runtime, and the calls are slower. So I use them deliberately and add property and method annotations for the IDE."
+    }
+  }
+}

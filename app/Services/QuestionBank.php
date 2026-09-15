@@ -3,11 +3,13 @@
 namespace App\Services;
 
 use App\Enums\Difficulty;
+use App\Enums\Language;
 use App\Enums\QuestionType;
 use App\Models\Question;
 use App\Models\Trainee;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Collection as SupportCollection;
 
 /**
  * Подбор вопросов для тренировки: с учётом уровня, темы и слабых мест кандидата.
@@ -52,6 +54,33 @@ class QuestionBank
     }
 
     /**
+     * Перемешивает выборку так, чтобы соседние вопросы были из разных тем.
+     *
+     * Приём: чередование (interleaving). Вперемешку материал усваивается хуже
+     * в моменте, но удерживается заметно дольше, чем блоками по одной теме.
+     *
+     * @param  SupportCollection<int, Question>  $questions
+     * @return SupportCollection<int, Question>
+     */
+    public function interleave(SupportCollection $questions): SupportCollection
+    {
+        $byTopic = $questions->groupBy('topic_id')->map->values()->values();
+        $result = collect();
+
+        while ($byTopic->isNotEmpty()) {
+            $byTopic = $byTopic->map(function (SupportCollection $group) use ($result) {
+                if ($group->isNotEmpty()) {
+                    $result->push($group->shift());
+                }
+
+                return $group;
+            })->filter(fn (SupportCollection $group) => $group->isNotEmpty())->values();
+        }
+
+        return $result;
+    }
+
+    /**
      * Вес темы: чем хуже средняя самооценка, тем выше приоритет.
      * Темы без ответов получают повышенный вес — их нужно проверить.
      *
@@ -69,7 +98,7 @@ class QuestionBank
     /** @return Builder<Question> */
     public function query(array $filters = []): Builder
     {
-        $query = Question::query()->with('topic');
+        $query = Question::query()->with(['topic', 'translations']);
 
         if ($types = $filters['types'] ?? null) {
             $query->whereIn('type', array_map(
@@ -80,6 +109,20 @@ class QuestionBank
 
         if ($topics = $filters['topics'] ?? null) {
             $query->whereIn('topic_id', $topics);
+        }
+
+        // Область тем: language — упражнения на английский, остальные — технические.
+        if ($areas = $filters['areas'] ?? null) {
+            $query->whereHas('topic', fn (Builder $q) => $q->whereIn('area', (array) $areas));
+        }
+
+        if ($exceptAreas = $filters['except_areas'] ?? null) {
+            $query->whereHas('topic', fn (Builder $q) => $q->whereNotIn('area', (array) $exceptAreas));
+        }
+
+        // В сессии на английском показываем только то, что переведено.
+        if ($language = $filters['language'] ?? null) {
+            $query->translatedInto($language instanceof Language ? $language : Language::from($language));
         }
 
         if ($difficulties = $filters['difficulties'] ?? null) {

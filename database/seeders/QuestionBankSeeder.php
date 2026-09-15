@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Question;
+use App\Models\QuestionTranslation;
 use App\Models\Topic;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\File;
@@ -15,6 +16,8 @@ class QuestionBankSeeder extends Seeder
 {
     public function run(): void
     {
+        $models = [];
+
         foreach ($this->files() as $path) {
             $payload = json_decode(File::get($path), true, 512, JSON_THROW_ON_ERROR);
 
@@ -29,7 +32,7 @@ class QuestionBankSeeder extends Seeder
             );
 
             foreach ($payload['questions'] as $question) {
-                Question::updateOrCreate(
+                $models[$question['id']] = Question::updateOrCreate(
                     ['external_id' => $question['id']],
                     [
                         'topic_id' => $topic->id,
@@ -40,11 +43,47 @@ class QuestionBankSeeder extends Seeder
                         'explanation' => $question['explanation'] ?? null,
                         'options' => $question['options'] ?? null,
                         'correct_option' => $question['correct_option'] ?? null,
+                        'accepted' => $question['accepted'] ?? null,
                         'follow_ups' => $question['follow_ups'] ?? null,
                         'checklist' => $question['checklist'] ?? null,
                         'red_flags' => $question['red_flags'] ?? null,
                         'tags' => $question['tags'] ?? null,
                         'estimated_seconds' => $question['estimated_seconds'] ?? 120,
+                    ],
+                );
+            }
+        }
+
+        $this->seedTranslations($models);
+    }
+
+    /**
+     * Переводы лежат отдельно от оригиналов: их можно дополнять по частям,
+     * а незаполненные поля берутся из русской версии вопроса.
+     *
+     * @param  array<string, Question>  $questions
+     */
+    protected function seedTranslations(array $questions): void
+    {
+        foreach (glob(database_path('data/translations/*/*.json')) ?: [] as $path) {
+            $payload = json_decode(File::get($path), true, 512, JSON_THROW_ON_ERROR);
+            $locale = $payload['locale'];
+
+            foreach ($payload['questions'] as $externalId => $translation) {
+                $question = $questions[$externalId] ?? Question::firstWhere('external_id', $externalId);
+
+                if (! $question) {
+                    continue;
+                }
+
+                QuestionTranslation::updateOrCreate(
+                    ['question_id' => $question->id, 'locale' => $locale],
+                    [
+                        'prompt' => $translation['prompt'] ?? $question->prompt,
+                        'answer' => $translation['answer'] ?? $question->answer,
+                        'explanation' => $translation['explanation'] ?? null,
+                        'options' => $translation['options'] ?? null,
+                        'follow_ups' => $translation['follow_ups'] ?? null,
                     ],
                 );
             }

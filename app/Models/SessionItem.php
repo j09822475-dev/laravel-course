@@ -42,10 +42,12 @@ class SessionItem extends Model
     public function phaseLabel(): string
     {
         return match ($this->phase) {
+            'warm_up' => 'Разогрев речи',
             'intro' => 'Знакомство',
             'screening' => 'Скрининг',
             'tech' => 'Техническая секция',
             'live_coding' => 'Живое кодирование',
+            'drill' => 'Отработка фраз',
             'wrap_up' => 'Вопросы кандидата',
             default => $this->phase,
         };
