@@ -26,8 +26,17 @@ class IdentifyTrainee
         if ($user = $request->user()) {
             // Гостевой прогресс не теряется: он присваивается аккаунту при первом входе.
             $trainee = $this->sync->attach($user, $trainee?->isGuest() ? $trainee : null);
-        } elseif (! $trainee || ! $trainee->isGuest()) {
+        } elseif ($trainee && ! $trainee->isGuest()) {
             // Профиль аккаунта не должен достаться гостю после выхода из системы.
+            $trainee = null;
+        }
+
+        if (! $trainee) {
+            // Публичную ссылку открывают посторонние — заводить им профиль незачем.
+            if ($request->routeIs('share.show')) {
+                return $next($request);
+            }
+
             $trainee = Trainee::create(['name' => 'Кандидат']);
         }
 

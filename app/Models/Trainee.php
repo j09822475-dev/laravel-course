@@ -15,7 +15,12 @@ class Trainee extends Model
     use HasFactory;
     use HasUuids;
 
-    protected $fillable = ['user_id', 'uuid', 'name', 'target_level', 'share_token', 'shared_at'];
+    /**
+     * Заполняются из запроса только эти поля. Привязка к аккаунту и токен
+     * доступа ставятся кодом через forceFill: случайный update($request->all())
+     * в будущем контроллере иначе отдал бы чужой профиль или открыл доступ.
+     */
+    protected $fillable = ['name', 'target_level'];
 
     /** Значения по умолчанию нужны и в модели: новый профиль используется сразу после create(). */
     protected $attributes = [

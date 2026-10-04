@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Trainee;
 use App\Services\ProgressReport;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\View\View;
+use Illuminate\Http\Response;
 
 /**
  * Публичная страница прогресса по ссылке-токену.
@@ -16,17 +16,21 @@ use Illuminate\View\View;
  */
 class ShareController extends Controller
 {
-    public function show(string $token, ProgressReport $report): View
+    public function show(string $token, ProgressReport $report): Response
     {
         $owner = Trainee::where('share_token', $token)->firstOrFail();
 
-        return view('share.show', [
+        return response()->view('share.show', [
             'owner' => $owner,
             'readiness' => $report->readiness($owner),
             'summary' => $report->summary($owner),
             'stats' => $report->topicStats($owner)->filter(fn (array $row) => $row['answered'] > 0)->values(),
             'sessions' => $report->recentSessions($owner, 5),
-        ]);
+        ])
+            // Секрет лежит в адресе страницы: закрываем её от поисковиков
+            // и не отдаём адрес сторонним сайтам в заголовке Referer.
+            ->header('X-Robots-Tag', 'noindex, nofollow')
+            ->header('Referrer-Policy', 'no-referrer');
     }
 
     public function store(Trainee $trainee): RedirectResponse

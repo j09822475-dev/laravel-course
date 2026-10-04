@@ -2,10 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Enums\QuestionType;
 use App\Models\Question;
 use App\Models\Topic;
 use App\Models\Trainee;
 use App\Models\User;
+use App\Services\ProgressSync;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
@@ -116,6 +118,48 @@ class MobileApiTest extends TestCase
         $this->postJson("/api/v1/sessions/{$sessionId}/answer", ['answer' => 'мой ответ'])
             ->assertStatus(422)
             ->assertJsonValidationErrors('rating');
+    }
+
+    public function test_shadowing_passage_is_visible_before_answering(): void
+    {
+        $topic = Topic::factory()->create(['area' => 'language']);
+        Question::factory()->count(3)->for($topic)->create([
+            'type' => QuestionType::Shadowing,
+            'answer' => 'I am a full stack developer with four years of experience.',
+        ]);
+
+        $user = User::factory()->create();
+        Sanctum::actingAs($user);
+
+        $trainee = (new ProgressSync)->attach($user);
+        $session = $trainee->sessions()->create([
+            'mode' => 'english_interview',
+            'title' => 'Интервью на английском',
+            'status' => 'in_progress',
+            'config' => ['language' => 'en'],
+            'started_at' => now(),
+        ]);
+        $session->items()->create([
+            'question_id' => Question::where('type', 'shadowing')->first()->id,
+            'position' => 1,
+            'phase' => 'warm_up',
+        ]);
+
+        $state = $this->getJson("/api/v1/sessions/{$session->id}")->assertOk();
+
+        // Для шэдоуинга образец и есть задание: без него упражнение бессмысленно.
+        $this->assertSame(
+            'I am a full stack developer with four years of experience.',
+            $state->json('current.question.answer'),
+        );
+
+        // У обычного вопроса эталон по-прежнему скрыт до ответа.
+        $theory = Question::factory()->create(['answer' => 'Скрытый эталон']);
+        $session->items()->create(['question_id' => $theory->id, 'position' => 2, 'phase' => 'tech']);
+        $this->postJson("/api/v1/sessions/{$session->id}/answer", ['rating' => 2]);
+
+        $next = $this->getJson("/api/v1/sessions/{$session->id}")->assertOk();
+        $this->assertNull($next->json('current.question.answer'));
     }
 
     public function test_session_of_another_account_is_forbidden(): void

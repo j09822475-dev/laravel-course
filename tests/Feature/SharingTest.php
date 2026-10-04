@@ -118,6 +118,47 @@ class SharingTest extends TestCase
         $this->get("/p/{$new}")->assertOk();
     }
 
+    public function test_public_page_is_closed_from_search_engines(): void
+    {
+        $user = User::factory()->create();
+        $token = $this->traineeWithProgress($user)->startSharing();
+
+        $response = $this->get("/p/{$token}");
+
+        // Токен лежит в адресе: страница не должна попадать в индекс
+        // и не должна утекать в заголовке Referer на сторонние сайты.
+        $response->assertHeader('X-Robots-Tag', 'noindex, nofollow')
+            ->assertHeader('Referrer-Policy', 'no-referrer')
+            ->assertSee('name="robots"', false);
+    }
+
+    public function test_visiting_a_share_link_does_not_create_a_profile(): void
+    {
+        $user = User::factory()->create();
+        $token = $this->traineeWithProgress($user)->startSharing();
+
+        $before = Trainee::count();
+
+        $this->get("/p/{$token}")->assertOk();
+
+        $this->assertSame($before, Trainee::count(), 'Постороннему читателю профиль заводить не нужно');
+    }
+
+    public function test_share_token_cannot_be_set_through_mass_assignment(): void
+    {
+        $trainee = Trainee::factory()->create(['user_id' => User::factory()->create()->id]);
+
+        $trainee->fill([
+            'name' => 'Иван',
+            'share_token' => 'подставленный-токен',
+            'user_id' => 999,
+        ])->save();
+
+        $this->assertNull($trainee->refresh()->share_token);
+        $this->assertNotSame(999, $trainee->user_id);
+        $this->assertSame('Иван', $trainee->name);
+    }
+
     public function test_guest_cannot_create_a_share_link(): void
     {
         $this->get('/');

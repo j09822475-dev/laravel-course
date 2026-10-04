@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Enums\Language;
+use App\Enums\QuestionType;
 use App\Models\Question;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -30,6 +31,8 @@ class QuestionResource extends JsonResource
             'estimated_seconds' => $this->estimated_seconds,
             'technique' => $this->type->technique(),
             // Эталон не отдаём вместе с вопросом: иначе клиент покажет его до ответа.
+            // Исключение — шэдоуинг: там образец и есть само задание, его читают вслух.
+            'answer' => $this->when($this->type === QuestionType::Shadowing, fn () => $text->answer),
             'auto_graded' => $this->isAutoGraded(),
         ];
     }
@@ -39,12 +42,14 @@ class QuestionResource extends JsonResource
     {
         $text = $this->resource->in($this->language);
 
-        return $this->toArray(request()) + [
+        // Именно array_merge: значения справа должны перекрывать заглушку
+        // условного поля answer из toArray(), иначе эталон потеряется.
+        return array_merge($this->toArray(request()), [
             'answer' => $text->answer,
             'explanation' => $text->explanation,
             'follow_ups' => $text->followUps,
             'checklist' => $this->resource->checklist,
             'red_flags' => $this->resource->red_flags,
-        ];
+        ]);
     }
 }

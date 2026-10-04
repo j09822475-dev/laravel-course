@@ -2,6 +2,11 @@
 
 @section('title', 'Прогресс · '.$owner->name)
 
+@section('meta')
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="referrer" content="no-referrer">
+@endsection
+
 @section('content')
     <div class="mx-auto max-w-3xl space-y-6">
         <x-card>

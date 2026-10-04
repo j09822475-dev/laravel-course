@@ -36,7 +36,7 @@ class ProgressSync
                 return $guest->refresh();
             }
 
-            return Trainee::create([
+            return Trainee::forceCreate([
                 'user_id' => $user->id,
                 'name' => $user->name,
             ]);

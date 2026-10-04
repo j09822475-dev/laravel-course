@@ -226,7 +226,7 @@ php artisan interview:drill --topic=laravel-core --level=middle --count=5
 ## Разработка
 
 ```sh
-php artisan test          # 123 теста: сценарии, аккаунты, синхронизация, шаринг, API, PWA
+php artisan test          # 127 тестов: сценарии, аккаунты, синхронизация, шаринг, API, PWA
 ./vendor/bin/pint         # стиль кода
 npm run dev               # Vite с горячей перезагрузкой
 ```
