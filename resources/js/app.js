@@ -54,3 +54,57 @@ function startAnswerTimer() {
 document.addEventListener('DOMContentLoaded', () => {
     startAnswerTimer();
 });
+
+/**
+ * Регистрация service worker: без него Android не предлагает установку,
+ * а при обрыве связи пользователь видит ошибку браузера вместо подсказки.
+ */
+function registerServiceWorker() {
+    if (!('serviceWorker' in navigator)) {
+        return;
+    }
+
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(() => {
+            // Регистрация падает на http и в приватном режиме — приложение
+            // продолжает работать, просто без офлайн-заглушки и установки.
+        });
+    });
+}
+
+/** Кнопка установки появляется только когда Android действительно готов установить приложение. */
+function bindInstallPrompt() {
+    const button = document.querySelector('[data-install]');
+
+    if (!button) {
+        return;
+    }
+
+    let deferred = null;
+
+    window.addEventListener('beforeinstallprompt', (event) => {
+        event.preventDefault();
+        deferred = event;
+        button.hidden = false;
+    });
+
+    button.addEventListener('click', async () => {
+        if (!deferred) {
+            return;
+        }
+
+        button.hidden = true;
+        deferred.prompt();
+        await deferred.userChoice;
+        deferred = null;
+    });
+
+    window.addEventListener('appinstalled', () => {
+        button.hidden = true;
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    registerServiceWorker();
+    bindInstallPrompt();
+});

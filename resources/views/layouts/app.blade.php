@@ -4,6 +4,14 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="theme-color" content="#4f46e5">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Тренажёр">
+    <link rel="manifest" href="{{ url('/manifest.webmanifest') }}">
+    <link rel="icon" href="{{ asset('icons/icon-192.png') }}" sizes="192x192">
+    <link rel="apple-touch-icon" href="{{ asset('icons/apple-touch-icon.png') }}">
     <title>@yield('title', 'Тренажёр собеседований') · {{ config('app.name') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
@@ -32,12 +40,31 @@
                 @endforeach
             </nav>
 
-            @isset($trainee)
-                <div class="hidden text-right text-xs text-slate-500 sm:block dark:text-slate-400">
-                    <div class="font-medium text-slate-700 dark:text-slate-200">{{ $trainee->name }}</div>
-                    <div>цель: {{ $trainee->target_level->label() }}</div>
+            @auth
+                <div class="flex items-center gap-2">
+                    <div class="hidden text-right text-xs text-slate-500 sm:block dark:text-slate-400">
+                        <div class="font-medium text-slate-700 dark:text-slate-200">{{ auth()->user()->name }}</div>
+                        <div>цель: {{ $trainee->target_level->label() }}</div>
+                    </div>
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button class="rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800">
+                            Выйти
+                        </button>
+                    </form>
                 </div>
-            @endisset
+            @else
+                <div class="flex items-center gap-1 text-sm">
+                    <a href="{{ route('login') }}"
+                       class="rounded-lg px-3 py-2 font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
+                        Войти
+                    </a>
+                    <a href="{{ route('register') }}"
+                       class="rounded-lg bg-indigo-600 px-3 py-2 font-semibold text-white hover:bg-indigo-500">
+                        Создать аккаунт
+                    </a>
+                </div>
+            @endauth
         </div>
     </header>
 
@@ -60,6 +87,13 @@
 
         @yield('content')
     </main>
+
+    <div class="mx-auto max-w-6xl px-4">
+        <button data-install hidden
+                class="mb-6 w-full rounded-xl border border-indigo-300 bg-indigo-50/60 px-4 py-3 text-sm font-semibold text-indigo-700 hover:bg-indigo-100 sm:w-auto dark:border-indigo-500/40 dark:bg-indigo-500/10 dark:text-indigo-300">
+            Установить приложение на телефон
+        </button>
+    </div>
 
     <footer class="mx-auto max-w-6xl px-4 py-10 text-xs text-slate-400">
         Тренажёр не заменяет реальный опыт — он помогает проговорить ответы вслух до собеседования.

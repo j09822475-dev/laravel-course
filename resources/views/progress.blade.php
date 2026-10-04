@@ -70,6 +70,59 @@
                 </p>
             </x-card>
 
+            <x-card title="Поделиться прогрессом">
+                @auth
+                    @if ($trainee->isShared())
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Ссылка открыта для всех, у кого она есть. Личные данные и тексты ответов на ней не показываются.
+                        </p>
+                        <div class="mt-3 flex items-center gap-2">
+                            <input readonly value="{{ $trainee->shareUrl() }}" onclick="this.select()"
+                                   class="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-xs dark:border-slate-700 dark:bg-slate-950">
+                        </div>
+                        <div class="mt-3 flex flex-wrap gap-2">
+                            <a href="{{ $trainee->shareUrl() }}" target="_blank" rel="noopener"
+                               class="rounded-xl border border-slate-300 px-3 py-2 text-xs font-medium hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800">
+                                Открыть
+                            </a>
+                            <form method="POST" action="{{ route('share.update') }}">
+                                @csrf
+                                @method('PUT')
+                                <button class="rounded-xl border border-slate-300 px-3 py-2 text-xs font-medium hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800">
+                                    Новая ссылка
+                                </button>
+                            </form>
+                            <form method="POST" action="{{ route('share.destroy') }}">
+                                @csrf
+                                @method('DELETE')
+                                <button class="rounded-xl border border-rose-300 px-3 py-2 text-xs font-medium text-rose-700 hover:bg-rose-50 dark:border-rose-500/40 dark:text-rose-300 dark:hover:bg-rose-500/10">
+                                    Закрыть доступ
+                                </button>
+                            </form>
+                        </div>
+                    @else
+                        <p class="text-sm text-slate-600 dark:text-slate-300">
+                            Создайте ссылку, чтобы показать прогресс ментору или команде. Видны будут только проценты
+                            по темам и результаты сессий — без ваших ответов и почты.
+                        </p>
+                        <form method="POST" action="{{ route('share.store') }}" class="mt-3">
+                            @csrf
+                            <button class="w-full rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-500">
+                                Создать ссылку
+                            </button>
+                        </form>
+                    @endif
+                @else
+                    <p class="text-sm text-slate-600 dark:text-slate-300">
+                        Делиться прогрессом можно из аккаунта — он же синхронизирует результаты между устройствами.
+                    </p>
+                    <a href="{{ route('register') }}"
+                       class="mt-3 block rounded-xl bg-indigo-600 px-4 py-2.5 text-center text-sm font-semibold text-white hover:bg-indigo-500">
+                        Создать аккаунт
+                    </a>
+                @endauth
+            </x-card>
+
             <x-card :title="'К повторению: '.$dueCount">
                 @if ($due->isEmpty())
                     <p class="text-sm text-slate-500">Очередь повторений пуста.</p>

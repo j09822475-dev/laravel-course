@@ -6,14 +6,16 @@ use App\Enums\Difficulty;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 class Trainee extends Model
 {
     use HasFactory;
     use HasUuids;
 
-    protected $fillable = ['uuid', 'name', 'target_level'];
+    protected $fillable = ['user_id', 'uuid', 'name', 'target_level', 'share_token', 'shared_at'];
 
     /** Значения по умолчанию нужны и в модели: новый профиль используется сразу после create(). */
     protected $attributes = [
@@ -23,7 +25,47 @@ class Trainee extends Model
 
     protected function casts(): array
     {
-        return ['target_level' => Difficulty::class];
+        return [
+            'target_level' => Difficulty::class,
+            'shared_at' => 'datetime',
+        ];
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    /** Гостевой профиль живёт только в сессии браузера и может быть присвоен аккаунту. */
+    public function isGuest(): bool
+    {
+        return $this->user_id === null;
+    }
+
+    public function isShared(): bool
+    {
+        return filled($this->share_token);
+    }
+
+    public function shareUrl(): ?string
+    {
+        return $this->isShared() ? route('share.show', $this->share_token) : null;
+    }
+
+    /** Включает публичную страницу прогресса, выдавая новый непредсказуемый адрес. */
+    public function startSharing(): string
+    {
+        $this->forceFill([
+            'share_token' => Str::random(32),
+            'shared_at' => now(),
+        ])->save();
+
+        return $this->share_token;
+    }
+
+    public function stopSharing(): void
+    {
+        $this->forceFill(['share_token' => null, 'shared_at' => null])->save();
     }
 
     public function uniqueIds(): array
